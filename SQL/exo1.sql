@@ -67,7 +67,7 @@ WHERE country = 'USA'
 
 SELECT *
 FROM games
-WHERE release_date >= '2021-01-01'
+WHERE release_date >= '2021-12-31'
 
 -- ### 12.
 -- Display all games released before 2020.
