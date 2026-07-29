@@ -159,3 +159,5 @@ SELECT game_id, AVG(rating)::DECIMAL(10, 2) AS "Note moyenne"
 FROM reviews
 GROUP BY game_id
 HAVING AVG(rating) >= 4.5
+
+....
