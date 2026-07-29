@@ -32,22 +32,22 @@ FROM games
 
 -- 6. Display the total number of users.
 
-SELECT COUNT(*)
+SELECT COUNT(*) AS "Nombre total d'utilisateurs"
 FROM users
 
 -- 7. Display the total number of games.
 
-SELECT COUNT(*)
+SELECT COUNT(*) AS "Nombre total de jeux"
 FROM games
 
 -- 8. Display the average game price.
 
-SELECT AVG(price)::DECIMAL(10, 2)
+SELECT AVG(price)::DECIMAL(10, 2) AS "Moyenne des prix de jeu"
 FROM games
 
 -- 9. Display the total number of hours played.
 
-SELECT SUM(hours_played)
+SELECT SUM(hours_played) AS "Nombre total d'heures jouées"
 FROM user_games
 
 -- 10. Display the highest and lowest rating.
@@ -57,7 +57,7 @@ FROM reviews
 
 -- 11. Display the number of users per country.
 
-SELECT COUNT(username), country
+SELECT COUNT(username) AS "Nombre d'utilisateurs par pays", country
 FROM users
 GROUP BY country
 
@@ -75,7 +75,7 @@ GROUP BY publisher_id
 
 -- 14. Display the total hours played per user_id.
 
-SELECT SUM(hours_played)::DECIMAL(10, 2), user_id
+SELECT SUM(hours_played)::DECIMAL(10, 2) AS "Total d'heures jouées par user_id", user_id
 FROM user_games
 GROUP BY user_id
 
@@ -99,7 +99,7 @@ GROUP BY game_id
 
 -- 18. Display the number of purchases per year.
 
-SELECT COUNT(purchase_date) AS "Jeux achetés par année", EXTRACT('YEAR' FROM purchase_date)
+SELECT COUNT(purchase_date) AS "Jeux achetés par année", EXTRACT(YEAR FROM purchase_date)
 FROM user_games
 GROUP BY EXTRACT('YEAR' FROM purchase_date)
 
@@ -107,7 +107,7 @@ GROUP BY EXTRACT('YEAR' FROM purchase_date)
 
 SELECT COUNT(release_date) AS "Jeux sorti par année", EXTRACT('YEAR' FROM release_date)
 FROM games
-GROUP BY EXTRACT('YEAR' FROM release_date)
+GROUP BY 2 -- 2 Vaut pour le 2e argument de SELECT (EXTRACT([...]))
 
 -- 20. Display the number of games per price category:
 -- - Free if price = 0
@@ -115,20 +115,15 @@ GROUP BY EXTRACT('YEAR' FROM release_date)
 -- - Standard if price between 30 and 60
 -- - Expensive if price > 60
 
-SELECT COUNT(title), 
+SELECT COUNT(title) AS "Nombre de jeux par catégorie de prix" , 
 	CASE
 		WHEN price = 0 THEN 'Free'
 		WHEN price < 30 THEN 'Cheap'
-		WHEN price BETWEEN 30 AND 60 THEN 'Strandard'
+		WHEN price < 60 THEN 'Strandard'
 		WHEN price > 60 THEN 'Expensive'
 	END AS "Catégorie de prix"
 FROM games
-GROUP BY CASE
-		WHEN price = 0 THEN 'Free'
-		WHEN price < 30 THEN 'Cheap'
-		WHEN price BETWEEN 30 AND 60 THEN 'Strandard'
-		WHEN price > 60 THEN 'Expensive'
-	END
+GROUP BY 2 -- 2 Vaut pour le 2e argument de SELECT
 
 -- 21. Display the number of paid games per publisher_id.
 
