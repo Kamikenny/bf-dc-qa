@@ -338,7 +338,7 @@ LIMIT 5
 SELECT
 	g.title AS "game_title",
 	p.name AS "publisher_name",
-	COALESCE(COUNT(r.rating), 0) AS "total_reviews",
+	COUNT(r.rating) AS "total_reviews",
 	AVG(r.rating)::DECIMAL(3,2) AS "average_rating"
 FROM
 	reviews r
@@ -350,7 +350,7 @@ GROUP BY
 	g.title,
 	p.name
 ORDER BY
-	AVG(r.rating)::DECIMAL(3,2)
+	AVG(r.rating)::DECIMAL(3,2) DESC NULLS LAST
 
 
 -- ### 17. Complete user activity
@@ -370,7 +370,7 @@ ORDER BY
 SELECT
 	u.username AS "username",
 	COUNT(DISTINCT ug.game_id) AS "games_owned",
-	COUNT(DISTINCT r.comment) AS "reviews_written"
+	COUNT(DISTINCT r.comment) AS "reviews_written"  -- UTILISER r.id au lieu de r.comment, meilleure pratique
 FROM
 	users u
 LEFT JOIN
@@ -420,7 +420,23 @@ HAVING
 -- * `publisher_country`
 -- * `local_players`
 
--- ---
+SELECT
+	p.name AS "publisher_name",
+	p.country AS "publisher_country",
+	COUNT(DISTINCT u.id) AS "local_players"
+FROM
+	publishers p
+LEFT JOIN
+	games g ON p.id = g.publisher_id
+LEFT JOIN
+	user_games ug ON g.id = ug.game_id
+LEFT JOIN
+	users u ON ug.user_id = u.id AND u.country = p.country -- Pas oublier, possibilité d'insérer des conditions dans les JOIN
+GROUP BY
+	p.name,
+	p.country
+ORDER BY
+	p.name ASC
 
 -- ### 20. Publishers ranked by playtime
 
@@ -434,3 +450,17 @@ HAVING
 -- * `total_hours_played`
 
 -- Order the result from the highest total playtime to the lowest.
+
+SELECT
+	p.name AS "publisher_name",
+	COALESCE(SUM(ug.hours_played), 0) AS "total_hours_played"
+FROM
+	user_games ug
+JOIN
+	games g ON ug.game_id = g.id
+RIGHT JOIN
+	publishers p ON g.publisher_id = p.id
+GROUP BY
+	p.name
+ORDER BY
+	COALESCE(SUM(ug.hours_played), 0) DESC
