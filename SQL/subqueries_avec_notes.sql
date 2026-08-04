@@ -185,16 +185,17 @@ ORDER BY
 	g.title ASC
 
 -- 9* . Display all games whose total played hours are above the average total played hours of their publisher.
-
-SELECT -- ERRONE
+-- CORRECTION
+SELECT
 	g.title,
+	-- g.publisher_id,  Obligatoire si on n'utilise pas "g.id" dans le GROUP BY
 	SUM(ug.hours_played) AS total_hours
 FROM
 	games g
 JOIN
 	user_games ug ON ug.game_id = g.id
 GROUP BY
-	g.title
+	g.id -- PRIMARY KEY pour transférer les autres colonnes aux sous requêtes ("g.title, g.publisher_id" fonctionnerait aussi si "g.publisher_id" était dans le SELECT)
 HAVING
 	SUM(ug.hours_played) > (
 		SELECT
@@ -203,14 +204,125 @@ HAVING
 			(
 				SELECT
 					g2.title,
+					g2.publisher_id, -- Doit être ajoutée, car on utilise le tableau en externe. Si pas de colonne dans le tableau, on n'a pas les données
 					SUM(ug2.hours_played) AS total_hours_sub
 				FROM
 					games g2
 				JOIN
 					user_games ug2 ON ug2.game_id = g2.id
 				GROUP BY
-					g2.title
+					g2.id -- PRIMARY KEY pour transférer les autres colonnes aux requêtes externes ("g2.title, g2.publisher_id" fonctionnerait aussi)
 			) AS pub_totals
 		WHERE
-			pub_totals.g2.publisher_id = g.publisher_id
-	) -- ERRONE
+			pub_totals.publisher_id = g.publisher_id
+	)
+
+-- 10. Display all users whose total hours played are greater than ALL users from Belgium
+-- CORRECTION
+SELECT
+	u.username,
+	SUM(ug.hours_played) AS total_hours
+FROM
+	users u
+JOIN
+	user_games ug ON ug.user_id = u.id
+GROUP BY
+	u.id
+HAVING
+	SUM(ug.hours_played) > ALL (
+		SELECT
+			SUM(ug2.hours_played)
+		FROM
+			users u2
+		JOIN
+			user_games ug2 ON ug2.user_id = u2.id
+		WHERE
+			u2.country = 'Belgium'
+		GROUP BY
+			u2.id
+	)
+
+-- 11. Display all games that have at least one review
+-- CORRECTION
+SELECT
+	g.title
+FROM
+	games g 
+WHERE EXISTS (
+	SELECT
+		1 -- pas besoin de récupérer les données, on doit juste vérifier que la donnée existe
+	FROM
+		reviews r 
+	WHERE
+		r.game_id = g.id
+)
+
+-- 12. Display all games that were never reviewed
+-- CORRECTION
+SELECT
+	g.title
+FROM
+	games g 
+WHERE NOT EXISTS (
+	SELECT
+		1 -- pas besoin de récupérer les données, on doit juste vérifier que la donnée existe
+	FROM
+		reviews r 
+	WHERE
+		r.game_id = g.id
+)
+
+-- --
+
+-- 14. Display all users who own at least one game in common with user 'Davit'.
+-- CORRECTION
+SELECT
+	u.username
+FROM
+	users u 
+WHERE EXISTS (
+	SELECT	
+		1 -- On vérifie l'existence, pas les données
+	FROM
+		user_games ug
+	WHERE 
+		ug.user_id = u.id AND ug.game_id IN (
+			SELECT
+				game_id 
+			FROM 
+				user_games
+			WHERE
+				user_id = (
+				SELECT
+					id
+				FROM
+					users 
+				WHERE
+					username ILIKE 'davit'
+				)
+		)
+)
+
+-- 15. Display all users who reviewed a game they do NOT own -- EXEMPLE de cas pratique de testeur. On vérifie qu'une entrée impossible n'existe pas. ICI la requête renvoie une ligne, c'est une anomalie.
+-- CORRECTION
+SELECT
+	u.username
+FROM
+	users u
+WHERE
+	EXISTS (
+		SELECT
+			1 -- On check l'existence, pas l'info
+		FROM
+			reviews r 
+		WHERE
+			r.user_id = u.id -- On vérifie s'il existe une review faite par le 'user'
+				AND NOT EXISTS ( -- MAIS qu'il n'y ait pas d'entrée d'entrée dans user_games pour l'user et le jeu ciblé par la review
+					SELECT
+						1 -- On check l'existence, pas l'info
+					FROM
+						user_games ug
+					WHERE
+						ug.user_id = u.id AND ug.game_id = r.game_id -- il y a une entrée avec l'id de l'user  ET l'id du jeu qui correspond à la review
+				)
+	)
