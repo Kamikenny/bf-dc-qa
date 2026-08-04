@@ -326,3 +326,26 @@ WHERE
 						ug.user_id = u.id AND ug.game_id = r.game_id -- il y a une entrée avec l'id de l'user  ET l'id du jeu qui correspond à la review
 				)
 	)
+
+-- 17. Using a CTE, display the top 3 users with the most total hours played.
+-- CORRECTION
+WITH user_hours AS ( -- On crée un nouveau tableau avec les données qu'on veut
+	SELECT
+		user_id,
+		SUM(hours_played) AS total_hours
+	FROM
+		user_games
+	GROUP BY
+		user_id
+)
+SELECT -- On crée une requête basée sur le tableau créé précédemment
+	u.username,
+	uh.total_hours
+FROM 
+	user_hours uh
+JOIN 
+	users u ON uh.user_id = u.id
+ORDER BY
+	uh.total_hours DESC
+LIMIT
+	3
