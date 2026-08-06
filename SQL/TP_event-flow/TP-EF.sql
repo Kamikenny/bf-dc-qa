@@ -241,14 +241,159 @@ FROM
 LEFT JOIN -- pour avoir les 'order_id' avec un 'payment_id' NULL
 	payments p ON o.id = p.order_id
 WHERE 
-	o.status = 'paid' AND NOT EXISTS (
+	o.status = 'paid'
+	AND NOT EXISTS (
+		SELECT
+			1
+		FROM
+			payments p2
+		WHERE
+			o.id = p2.order_id -- On cherche l'id d'une order qui N'EXISTE dans aucun payment
+	)
+
+-- 4.3 --
+SELECT
+	tc.name AS ticket_cat,
+	(tc.price_cents / 100)::MONEY AS selling_price,
+	(oi.unit_price_cents / 100)::MONEY AS sold_price
+FROM
+	ticket_categories tc
+JOIN
+	order_items oi ON oi.category_id = tc.id
+WHERE
+	(tc.price_cents / 100)::MONEY != (oi.unit_price_cents / 100)::MONEY
+
+-- 4.4 --
+-- PASS
+
+-- # PARTIE 5
+
+-- 5.1 --
+-- PASS
+
+-- 5.2 --
+WITH order_items_totals AS (
 	SELECT
-		1
+		order_id,
+		SUM(quantity * (unit_price_cents / 100)::MONEY) AS total_per_order
 	FROM
-		payments p2
-	WHERE
-		o.id = p2.order_id -- On cherche l'id d'une order qui N'EXISTE dans aucun payment
+		order_items
+	GROUP BY
+		order_id
 )
+SELECT
+	o.id AS order_id,
+	oit.total_per_order,
+	oit.total_per_order - (oit.total_per_order / 100 * pc.percent_off) AS total_after_promo,
+	(o.total_cents / 100)::MONEY AS order_price
+FROM
+	order_items_totals oit
+JOIN
+	orders o ON o.id = oit.order_id
+JOIN
+	promo_codes pc ON o.promo_code_id = pc.id
+WHERE
+	oit.total_per_order - (oit.total_per_order / 100 * pc.percent_off) != (o.total_cents / 100)::MONEY
+
+-- 5.3 --
+-- PASS
+
+-- PARTIE 6
+
+-- 6.1 --
+-- 6.1.1 	Selon le client (users.full_name), il y a eu paiement (EXISTS payment.id), mais (AND) la commande n'apparaît pas (orders.status != 'paid').
+-- 			Ou l'inverse : (NOT EXISTS payment.id) AND (orders.status = 'paid')
+-- 6.1.2 TABLES : users, orders, payments
+-- 6.1.3 JOINTS : users.id = orders.user_id, orders.id = payments.order_id (FULL JOIN pour avoir les deux cas)
+-- 6.1.4 ANOMALIE : orders.status != 'paid' AND payments.id IS NOT NULL OR orders.status = 'paid' AND payment.id IS NULL
+-- 6.1.5 CODE :
+SELECT
+	o.id AS order_id,
+	u.full_name AS client,
+	o.status AS order_status,
+	p.id AS payment_id
+FROM
+	orders o
+FULL JOIN
+	payments p ON p.order_id = o.id
+JOIN
+	users u ON u.id = o.user_id
+WHERE
+	o.status = 'paid' AND p.id IS NULL
+	OR o.status != 'paid' AND p.id IS NOT NULL
+
+-- 6.2 --
+-- 6.2.1	Un événement (events.id) est annulé (events.status = 'cancelled') 
+--			mais il reste des billets non remboursés (orders.status != 'refund')
+-- 6.2.2 TABLES : events, orders
+-- 6.2.3 JOINTS : events.id = orders.event_id
+-- 6.2.4 ANOMALIE : events.status = 'cancelled' AND orders.status != 'refund'
+-- 6.2.5 CODE :
+SELECT
+	o.id AS order_id,
+	e.title AS event_name,
+	e.status AS event_status,
+	o.status AS order_status
+FROM
+	orders o
+JOIN
+	events e ON e.id = o.event_id
+WHERE
+	e.status = 'cancelled' AND o.status != 'refund'
+
+-- 6.3 --
+-- 6.3.1	Certains clients (users.full_name) ont utilisé un code promo (promo_codes.code) 
+--			censé être invalide (expiré ou max utilisations) pour valider une commande (orders.id).
+-- 6.3.2 TABLES : users, orders, promo_codes
+-- 6.3.3 JOINTS : orders.user_id = users.id, orders.promo_code_id = promo_code.id
+-- 6.3.4 ANOMALIE : orders.created_at > promo_codes.expires_at OR orders.promo_code_id IN (used_count > max_uses)
+-- 6.3.5 CODE :
+SELECT
+	o.id AS order_id,
+	u.full_name AS client,
+	pc.code AS promo_code
+FROM
+	orders o
+JOIN
+	promo_codes pc ON o.promo_code_id = pc.id
+JOIN
+	users u ON o.user_id = u.id
+WHERE
+	pc.code IN (
+		SELECT
+			pc2.code
+		FROM
+			promo_codes pc2
+		WHERE
+			pc2.used_count >= pc2.max_uses
+			OR pc2.expires_at < o.created_at
+	)
+
+-- 6.4 --
+-- 6.4.1	Pour un événement (events.title), il y a eu plus de tickets vendus (SUM(order_items.quantity))
+--			que de places disponibles (events.capacity).
+-- 6.4.2 TABLES : oder_items oi, ticket_categories tc, events e
+-- 6.4.3 JOINTS : oi.category_id = tc.id, tc.event_id = e.id
+-- 6.4.4 ANOMALIE : SUM(order_items.quantity) > e.capacity
+-- 6.4.5 CODE :
+SELECT
+	e.title AS event_title,
+	SUM(oi.quantity) AS tickets_sold,
+	e.capacity AS event_capacity
+FROM
+	order_items oi
+JOIN
+	ticket_categories tc ON tc.id = oi.category_id
+JOIN
+	events e ON tc.event_id = e.id
+GROUP BY
+	e.id
+HAVING
+	SUM(oi.quantity) > e.capacity
+
+-- 6.5 --
+-- 6.5.1	
+
 
 
 
