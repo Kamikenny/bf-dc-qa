@@ -301,8 +301,8 @@ WHERE
 -- PARTIE 6
 
 -- 6.1 --
--- 6.1.1 	Selon le client (users.full_name), il y a eu paiement (EXISTS payment.id), mais (AND) la commande n'apparaît pas (orders.status != 'paid').
--- 			Ou l'inverse : (NOT EXISTS payment.id) AND (orders.status = 'paid')
+-- 6.1.1 	Selon le client (users.full_name), il y a eu paiement (EXISTS payments.id), mais (AND) la commande n'apparaît pas (orders.status != 'paid').
+-- 			Ou l'inverse : (NOT EXISTS payments.id) AND (orders.status = 'paid')
 -- 6.1.2 TABLES : users, orders, payments
 -- 6.1.3 JOINTS : users.id = orders.user_id, orders.id = payments.order_id (FULL JOIN pour avoir les deux cas)
 -- 6.1.4 ANOMALIE : orders.status != 'paid' AND payments.id IS NOT NULL OR orders.status = 'paid' AND payment.id IS NULL
@@ -324,7 +324,7 @@ WHERE
 
 -- 6.2 --
 -- 6.2.1	Un événement (events.id) est annulé (events.status = 'cancelled') 
---			mais il reste des billets non remboursés (orders.status != 'refund')
+--			mais il reste des billets non remboursés (orders.status != 'refund') -- CORRECTION : (orders.status = 'paid') -- si o.status est 'pending' il n'y a pas d'anomalie
 -- 6.2.2 TABLES : events, orders
 -- 6.2.3 JOINTS : events.id = orders.event_id
 -- 6.2.4 ANOMALIE : events.status = 'cancelled' AND orders.status != 'refund'
@@ -339,14 +339,14 @@ FROM
 JOIN
 	events e ON e.id = o.event_id
 WHERE
-	e.status = 'cancelled' AND o.status != 'refund'
+	e.status = 'cancelled' AND o.status != 'refund' -- CORRECTION : e.status = 'cancelled' AND o.status != 'paid' -- si o.status est 'pending' il n'y a pas d'anomalie
 
 -- 6.3 --
 -- 6.3.1	Certains clients (users.full_name) ont utilisé un code promo (promo_codes.code) 
 --			censé être invalide (expiré ou max utilisations) pour valider une commande (orders.id).
 -- 6.3.2 TABLES : users, orders, promo_codes
 -- 6.3.3 JOINTS : orders.user_id = users.id, orders.promo_code_id = promo_code.id
--- 6.3.4 ANOMALIE : orders.created_at > promo_codes.expires_at OR orders.promo_code_id IN (used_count > max_uses)
+-- 6.3.4 ANOMALIE : orders.created_at > promo_codes.expires_at OR orders.promo_code_id IN (used_count > max_uses) -- CORRECTION : Clarification sur pourquoi on utilise 'o.created_at' et pas 'o.expires_at'
 -- 6.3.5 CODE :
 SELECT
 	o.id AS order_id,
@@ -381,11 +381,16 @@ SELECT
 	SUM(oi.quantity) AS tickets_sold,
 	e.capacity AS event_capacity
 FROM
-	order_items oi
+	events e
+-- CORRECTION : Passer par 'orders' est un choix plus logique et permet de ne prendre que les tickets payés (o.status = 'paid')
+-- JOIN
+-- 	ticket_categories tc ON tc.id = oi.category_id
+-- JOIN
+-- 	events e ON tc.event_id = e.id
 JOIN
-	ticket_categories tc ON tc.id = oi.category_id
+	orders o ON e.id = o.event_id AND o.status ='paid'
 JOIN
-	events e ON tc.event_id = e.id
+	order_items oi ON o.id = oi.order_id
 GROUP BY
 	e.id
 HAVING
@@ -393,7 +398,7 @@ HAVING
 
 -- 6.5 --
 -- 6.5.1	
-
+-- CORRECTION : Exos pas faits pré-correction. Pas de notes pour favoriser la réflexion en solo.
 
 
 
