@@ -1,3 +1,6 @@
+# import pour exo
+import random
+
 # Trouvez un moyen d'inverser les valeurs de a et b sans utiliser l'affectation multiple (a, b = b, a)
 """ a:int = 5
 b:int = 7
@@ -7,6 +10,8 @@ a = b
 b = c
 print(f"a = {a} -- b = {b}")
  """
+
+### ### ###
 
 # Interactions console()
 # 1. Demandez à l'utilisateur son prénom et son nom, puis affichez-les avec un séparateur personnalisé.
@@ -34,6 +39,8 @@ print(f"la somme de vos deux chiffres = {x + y}.", end = "\nGG!") """
 y:int = 2
 z:int = 3
 print(x, y, z, sep = " + ", end = f" = {x + y + z}") """
+
+### ### ###
 
 # 1. Devinez les résultats des calculs sur les valeurs des variables A, B, C, D, E, F et G à partir des expressions suivantes :
 # 1. A = 12
@@ -98,15 +105,22 @@ print(x, y, z, sep = " + ", end = f" = {x + y + z}") """
 "True"
 
 # 4. Imaginez et réalisez une méthode manuelle permettant d'inverser le contenu d'une variable entière sans utiliser de variable temporaire.
+# 1
 """ a, b = 5, 6
 print(a, b)
 a = [a, b]
 b = a[0]
 a = a[1]
-print(a, b) """
+print(a, b)
+ """
+
+# 2
+""" a = a + b
+b = a - b
+a -= b """
 
 # 5. Écrivez un programme Python convertissant un nombre de secondes en jours, heures, minutes et seconds correspondants. Exemple : 4561 secondes correspondent à 0 jour, 1 heure, 16 minutes et 1 seconde. Réfléchissez à la méthode à utiliser, puis réalisez l'algorithme en Python. Testez-le ensuite pour vérifier sa validité.
-input_seconds = int(input("Entrer un nombre de secondes : "))
+""" input_seconds = int(input("Entrer un nombre de secondes : "))
 
 total_jours = input_seconds / 60 / 60 / 24
 jours_affiches = int(total_jours // 1)
@@ -125,3 +139,94 @@ secondes_affichees = int((total_secondes // 1) - ((total_minutes // 1) * 60))
 # print(total_secondes, secondes_affichees)
 
 print(f"{input_seconds} secondes correspondent à : {jours_affiches} jours, {heures_affichees} heures, {minutes_affichees} minutes et {secondes_affichees} secondes.")
+ """
+
+# CORRECTION
+""" seconds = int(input("donne les secondes : "))
+
+days = seconds // (60 * 60 * 24)
+seconds %= (60 * 60 * 24)
+
+hours = seconds // (60 * 60)
+seconds %= (60 * 60)
+
+minutes = seconds // 60
+seconds %= 60
+
+print(f"{days}j {hours}h {minutes}m {seconds}s")
+ """
+
+### ### ###
+
+# 1. Créez un programme qui gère les commandes de café en fonction des différentes options telles que la taille, le type de café, les extras, etc. Utilisez des correspondances pour traiter chaque option et calculer le prix total de la commande.
+""" coffee_order = {
+    "size": 0,
+    "type": 0,
+    "sugar_qty": 0,
+    "milk_qty": 0,
+    "price": 0.0
+}
+
+print("Bienvenue")
+while coffee_order["size"] not in (1, 2, 3):
+    coffee_order["size"] = int(input(
+        "Quelle taille pour le café ? (Entrez juste le chiffre)\n" +
+        "1. Petit\n" +
+        "2. Moyen\n" +
+        "3. Grand\n"
+    ))
+coffee_order["price"] += coffee_order["size"] * 1
+
+while coffee_order["type"] not in (1, 2, 3):
+    coffee_order["type"] = int(input(
+        "Quelle type de café ? (Entrez juste le chiffre)\n" +
+        "1. Pas bon\n" +
+        "2. Bon\n" +
+        "3. Très bon\n"
+    ))
+coffee_order["price"] += coffee_order["type"] * 1
+
+while coffee_order["sugar_qty"] not in (1, 2, 3, 4):
+    coffee_order["sugar_qty"] = int(input(
+        "Quelle quantité de sucre ? (Entrez juste le chiffre)\n" +
+        "1. Pas du tout\n" +
+        "2. Un peu\n" +
+        "3. Beaucoup\n" +
+        "4. Trop\n"
+    ))
+coffee_order["price"] += (coffee_order["sugar_qty"] - 1) * 0.1
+
+while coffee_order["milk_qty"] not in (1, 2, 3, 4):
+    coffee_order["milk_qty"] = int(input(
+        "Quelle quantité de lait ? (Entrez juste le chiffre)\n" +
+        "1. Pas du tout\n" +
+        "2. Un peu\n" +
+        "3. Beaucoup\n" +
+        "4. Trop\n"
+    ))
+coffee_order["price"] += (coffee_order["milk_qty"] - 1) * 0.1
+
+print("Merci")
+print(f"Votre café coûte : {coffee_order['price']} €") """
+
+# 2. Créez un programme qui convertit une note numérique en une note alphabétique en utilisant une échelle de notation standard. Utilisez des correspondances pour déterminer la note alphabétique correspondante en fonction de la note numérique.
+""" score = -1
+letter = ""
+while score < 0 or score > 100:
+    score = int(input("Quel est le score de l'élève ? (/100) : "))
+
+if score < 60:
+    letter = "F"
+elif score < 70:
+    letter = "D"
+elif score < 80:
+    letter = "C"
+elif score < 90:
+    letter = "B"
+else:
+    letter = "A"
+
+print(f"La note de l'élève ({score}/100) se traduit par un : {letter}.") """
+
+# 3. Créez un programme qui génère un nombre aléatoire (import random) et permet à l'utilisateur de deviner ce nombre. Utilisez des correspondances pour comparer la devinette de l'utilisateur avec le nombre généré et fournir des indices
+
