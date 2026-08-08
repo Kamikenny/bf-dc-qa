@@ -464,3 +464,25 @@ WHERE
 CONCLUSION :
 - Le statut de la commande dont l'id est 21 a été mis à jour alors qu'il n'y a pas eu de paiement.
 - Le statut de la commande dont l'id est 22 n'a pas été mis à jour après le paiement.
+
+**6.2**
+> Un événement a été annulé, mais on continue à voir des billets vendus
+   dessus.
+
+**6.2.1**
+
+.
+
+**6.2.2**
+- TABLES :
+- JOINTS :
+- ANOMALIES :
+
+**6.2.3**
+```sql
+
+```
+
+**6.2.4**
+
+CONCLUSION :
