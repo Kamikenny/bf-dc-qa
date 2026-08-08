@@ -51,13 +51,11 @@ SELECT
 	pc.code,
 	pc.used_count,
 	pc.max_uses,
-	NOW() - pc.expires_at -- On vérifie l'expiration aussi
+	NOW() > pc.expires_at AS "Code expiré ?"
 FROM
 	promo_codes pc
 WHERE
 	pc.code = 'FLASH50'
-
--- Le code 'FLASH50' est supposé fonctionner. Il reste 7 utilisation, et il n'expire que dans 4j23h06m
 
 -- # PARTIE 2
 
@@ -264,12 +262,52 @@ WHERE
 	(tc.price_cents / 100)::MONEY != (oi.unit_price_cents / 100)::MONEY
 
 -- 4.4 --
--- PASS
+SELECT
+	o.id AS order_id,
+	pc.code AS code_used,
+	-- o.created_at AS order_creation_date, -- double check manuel
+	-- pc.expires_at AS code_expiration, -- double check manuel
+	pc.expires_at < o.created_at AS "code expiré à la création de la commande ?",
+	-- pc.used_count, -- double check manuel
+	-- pc.max_uses, -- double check manuel
+	pc.used_count >= pc.max_uses AS "code épuisé à la création de la commande ?" -- Check au cas où
+FROM
+	orders o
+JOIN
+	promo_codes pc ON o.promo_code_id = pc.id
+WHERE
+	pc.expires_at < o.created_at
+	OR pc.used_count >= pc.max_uses
+	
 
 -- # PARTIE 5
 
 -- 5.1 --
--- PASS
+WITH tickets_sum_by_event AS (
+	SELECT
+		e.id AS event_id,
+		e.title AS event_title,
+		SUM(oi.quantity) AS total_sold
+	FROM
+		order_items oi
+	JOIN
+		orders o ON oi.order_id = o.id
+	JOIN
+		events e ON o.event_id = e.id
+	GROUP BY
+		e.id
+)
+SELECT
+	e1.title AS event_title,
+	-- ts.total_sold, -- Double check manuel
+	-- e1.capacity, -- Double check manuel
+	ts.total_sold > e1.capacity AS "Overbooked ?"
+FROM
+	events e1
+JOIN
+	tickets_sum_by_event ts ON e1.id = ts.event_id
+WHERE
+	ts.total_sold > e1.capacity
 
 -- 5.2 --
 WITH order_items_totals AS (
@@ -296,10 +334,31 @@ WHERE
 	oit.total_per_order - (oit.total_per_order / 100 * pc.percent_off) != (o.total_cents / 100)::MONEY
 
 -- 5.3 --
--- PASS
+WITH order_items_details AS (
+	SELECT
+		oi.id AS order_item_id,
+		oi.order_id AS order_id,
+		tc.event_id AS event_id
+	FROM
+		order_items oi
+	JOIN 
+		ticket_categories tc ON tc.id = oi.category_id
+)
+SELECT
+	o.id AS order_id,
+	COUNT(DISTINCT oid.event_id) AS "number of distinct events by order"
+FROM
+	orders o
+JOIN
+	order_items_details oid ON o.id = oid.order_id
+GROUP BY
+	o.id
+HAVING
+	COUNT(DISTINCT oid.event_id) > 1
 
--- PARTIE 6
+-- # PARTIE 6
 
+-- ######
 -- 6.1 --
 -- 6.1.1 	Selon le client (users.full_name), il y a eu paiement (EXISTS payments.id), mais (AND) la commande n'apparaît pas (orders.status != 'paid').
 -- 			Ou l'inverse : (NOT EXISTS payments.id) AND (orders.status = 'paid')
@@ -321,7 +380,10 @@ JOIN
 WHERE
 	o.status = 'paid' AND p.id IS NULL
 	OR o.status != 'paid' AND p.id IS NOT NULL
+-- 6.1.6 CONCLUSION :	Le statut de la commande dont l'id est 22 n'a pas été mis à jour après le paiement.
+--						Le statut de la commande dont l'id est 21 a été mis à jour alors qu'il n'y a pas eu de paiement.
 
+-- ######
 -- 6.2 --
 -- 6.2.1	Un événement (events.id) est annulé (events.status = 'cancelled') 
 --			mais il reste des billets non remboursés (orders.status != 'refund') -- CORRECTION : (orders.status = 'paid') -- si o.status est 'pending' il n'y a pas d'anomalie
@@ -339,14 +401,19 @@ FROM
 JOIN
 	events e ON e.id = o.event_id
 WHERE
-	e.status = 'cancelled' AND o.status != 'refund' -- CORRECTION : e.status = 'cancelled' AND o.status != 'paid' -- si o.status est 'pending' il n'y a pas d'anomalie
+	-- # CORRECTION :
+	-- e.status = 'cancelled' AND o.status != 'paid' ==> si o.status est 'pending' il n'y a pas d'anomalie
+	e.status = 'cancelled' AND o.status != 'refund'
+-- 6.2.6 CONCLUSION :	
 
+-- ######
 -- 6.3 --
 -- 6.3.1	Certains clients (users.full_name) ont utilisé un code promo (promo_codes.code) 
 --			censé être invalide (expiré ou max utilisations) pour valider une commande (orders.id).
 -- 6.3.2 TABLES : users, orders, promo_codes
 -- 6.3.3 JOINTS : orders.user_id = users.id, orders.promo_code_id = promo_code.id
--- 6.3.4 ANOMALIE : orders.created_at > promo_codes.expires_at OR orders.promo_code_id IN (used_count > max_uses) -- CORRECTION : Clarification sur pourquoi on utilise 'o.created_at' et pas 'o.expires_at'
+-- 6.3.4 ANOMALIE : orders.created_at > promo_codes.expires_at OR orders.promo_code_id IN (used_count > max_uses) 
+--		# CORRECTION : Clarification sur pourquoi on utilise 'o.created_at' et pas 'o.expires_at'
 -- 6.3.5 CODE :
 SELECT
 	o.id AS order_id,
@@ -360,6 +427,7 @@ JOIN
 	users u ON o.user_id = u.id
 WHERE
 	pc.code IN (
+		-- Codes promos expirés au moment de l'achat ou max_used
 		SELECT
 			pc2.code
 		FROM
@@ -368,7 +436,9 @@ WHERE
 			pc2.used_count >= pc2.max_uses
 			OR pc2.expires_at < o.created_at
 	)
+-- 6.3.6 CONCLUSION : La commande dont l'id est 24 par "Inès Moreau" a bénéficié d'un code promo expiré.
 
+-- ######
 -- 6.4 --
 -- 6.4.1	Pour un événement (events.title), il y a eu plus de tickets vendus (SUM(order_items.quantity))
 --			que de places disponibles (events.capacity).
@@ -382,7 +452,7 @@ SELECT
 	e.capacity AS event_capacity
 FROM
 	events e
--- CORRECTION : Passer par 'orders' est un choix plus logique et permet de ne prendre que les tickets payés (o.status = 'paid')
+-- # CORRECTION : Passer par 'orders' est un choix plus logique et permet de ne prendre que les tickets payés (o.status = 'paid')
 -- JOIN
 -- 	ticket_categories tc ON tc.id = oi.category_id
 -- JOIN
@@ -395,10 +465,47 @@ GROUP BY
 	e.id
 HAVING
 	SUM(oi.quantity) > e.capacity
+-- 6.4.6 CONCLUSION : L'événement "Concert Intimiste (petite salle)" a vendu 11 tickets pour une capacité de 10.
 
--- 6.5 --
--- 6.5.1	
+-- ###
 -- CORRECTION : Exos pas faits pré-correction. Pas de notes pour favoriser la réflexion en solo.
+-- ###
+
+-- ######
+-- 6.5 --
+-- 6.5.1	Une commande (orders.id) référence plusieurs billets (order_items.id) mais pas pour le même événement (ticket_categories.event_id)
+-- 6.5.2 TABLES : orders o, order_items oi, ticket_categories tc
+-- 6.5.3 JOINTS : o.id = tc.order_id, oi.category_id = tc.id
+-- 6.5.4 ANOMALIE : o.event_id != tc.event_id
+-- 6.5.5 CODE :
+SELECT
+	o.id AS order_id,
+	o.event_id AS event_from_order,
+	tc.event_id AS event_from_ticket
+FROM
+	orders o
+JOIN
+	order_items oi ON oi.order_id = o.id
+JOIN
+	ticket_categories tc ON tc.id = oi.category_id
+WHERE
+	o.event_id != tc.event_id
+-- 6.5.6 CONCLUSION : La commande dont l'id est 27 références des billets pour deux evénements différents.
+-- DOUBLE CHECK avec nom de l'événement : 
+SELECT
+	oi.order_id AS order_id,
+	oi.id AS oi_id,
+	e.title AS event_title
+FROM
+	order_items oi
+JOIN
+	ticket_categories tc ON tc.id = oi.category_id
+JOIN
+	events e ON tc.event_id = e.id
+WHERE
+	oi.order_id = 27
+
+
 
 
 

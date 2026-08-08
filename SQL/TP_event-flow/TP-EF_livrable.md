@@ -465,24 +465,199 @@ CONCLUSION :
 - Le statut de la commande dont l'id est 21 a été mis à jour alors qu'il n'y a pas eu de paiement.
 - Le statut de la commande dont l'id est 22 n'a pas été mis à jour après le paiement.
 
+---
+
 **6.2**
-> Un événement a été annulé, mais on continue à voir des billets vendus
-   dessus.
+> Un événement a été annulé, mais on continue à voir des billets vendus dessus.
 
 **6.2.1**
 
-.
+Un événement (`events.id`) est annulé (`events.status = 'cancelled'`) mais il reste des billets non remboursés (`orders.status != 'paid'`)
 
 **6.2.2**
-- TABLES :
-- JOINTS :
-- ANOMALIES :
+- TABLES : *events **e***, *orders **o***
+- JOINTS : `e.id = o.event_id`
+- ANOMALIE : `e.status = 'cancelled' AND o.status != 'refund'`
 
 **6.2.3**
 ```sql
-
+SELECT
+	o.id AS order_id,
+	e.title AS event_name,
+	e.status AS event_status,
+	o.status AS order_status
+FROM
+	orders o
+JOIN
+	events e ON e.id = o.event_id
+WHERE
+	e.status = 'cancelled' AND o.status = 'paid' 
 ```
 
 **6.2.4**
 
-CONCLUSION :
+CONCLUSION : La commande dont l'id est **23** n'est pas encore remboursée.
+
+---
+
+**6.3**
+> Certains clients semblent avoir bénéficié d'un code promo qui n'aurait plus dû être valide.
+
+**6.3.1**
+
+Certains clients (`users.full_name`) ont utilisé un code promo (`promo_codes.code`) censé être invalide (*expiré* ou *max utilisations*) pour valider une commande (`orders.id`).
+
+**6.3.2**
+- TABLES : *users **u***, *orders **o***, *promo_codes **pc***
+- JOINTS : `o.user_id = u.id`, `o.promo_code_id = pc.id`
+- ANOMALIE : `e.status = 'cancelled' AND o.status != 'refund'`
+
+**6.3.3**
+```sql
+SELECT
+	o.id AS order_id,
+	u.full_name AS client,
+	pc.code AS promo_code
+FROM
+	orders o
+JOIN
+	promo_codes pc ON o.promo_code_id = pc.id
+JOIN
+	users u ON o.user_id = u.id
+WHERE
+	pc.code IN (
+		-- Codes promos expirés au moment de l'achat ou max_used
+		SELECT
+			pc2.code
+		FROM
+			promo_codes pc2
+		WHERE
+			pc2.used_count >= pc2.max_uses
+			OR pc2.expires_at < o.created_at
+	)
+```
+
+**6.3.4**
+
+CONCLUSION : La commande dont l'id est **24** par "*Inès Moreau*" a bénéficié d'un code promo expiré.
+
+---
+
+**6.4**
+>  On soupçonne qu'un ou plusieurs événements ont vendu plus de billets que leur capacité ne le permettait.
+
+**6.4.1**
+
+Pour un événement (`events.title`), il y a eu plus de tickets vendus (`SUM(order_items.quantity)`) que de places disponibles (`events.capacity`).
+
+**6.4.2**
+- TABLES : *oder_items **oi***, *ticket_categories **tc***, *events **e***
+- JOINTS : `oi.category_id = tc.id`, `tc.event_id = e.id`
+- ANOMALIE : `SUM(order_items.quantity) > e.capacity`
+
+**6.4.3**
+```sql
+SELECT
+	e.title AS event_title,
+	SUM(oi.quantity) AS tickets_sold,
+	e.capacity AS event_capacity
+FROM
+	events e
+JOIN
+	orders o ON e.id = o.event_id AND o.status ='paid'
+JOIN
+	order_items oi ON o.id = oi.order_id
+GROUP BY
+	e.id
+HAVING
+	SUM(oi.quantity) > e.capacity
+```
+
+**6.4.4**
+
+CONCLUSION : L'événement "*Concert Intimiste (petite salle)*" a vendu **11** tickets pour une capacité de **10**.
+
+---
+
+**6.5**
+>  Une commande semble mélanger des billets de deux événements différents —ça ne devrait jamais arriver.
+
+**6.5.1**
+
+Une commande (`orders.id`) référence plusieurs billets (`order_items.id`) mais pas pour le même événement (`ticket_categories.event_id`)
+
+**6.5.2**
+- TABLES : *orders **o***, *order_items **oi***, *ticket_categories **tc***
+- JOINTS : `o.id = tc.order_id, oi.category_id = tc.id`
+- ANOMALIE : `o.event_id != tc.event_id`
+
+**6.5.3**
+```sql
+SELECT
+	o.id AS order_id,
+	o.event_id AS event_from_order,
+	tc.event_id AS event_from_ticket
+FROM
+	orders o
+JOIN
+	order_items oi ON oi.order_id = o.id
+JOIN
+	ticket_categories tc ON tc.id = oi.category_id
+WHERE
+	o.event_id != tc.event_id
+
+-- DOUBLE CHECK avec nom de l'événement : 
+SELECT
+	oi.order_id AS order_id,
+	oi.id AS oi_id,
+	e.title AS event_title
+FROM
+	order_items oi
+JOIN
+	ticket_categories tc ON tc.id = oi.category_id
+JOIN
+	events e ON tc.event_id = e.id
+WHERE
+	oi.order_id = 27
+```
+
+**6.5.4**
+
+CONCLUSION : La commande dont l'id est 27 références des billets pour deux evénements différents.
+
+---
+
+**6.6**
+>  Le prix facturé sur certaines lignes de commande ne correspond pas au
+   tarif affiché dans le catalogue.
+
+**6.6.1**
+
+Le prix sur certaines lignes de commande (`order_items.unit_price_cents`) ne correspond pas au tarif affiché dans le catalogue (`ticket_categories.price_cents`)
+
+**6.6.2**
+- TABLES : *order_items **oi***, *ticket_categories **tc***
+- JOINTS : `oi.category_id = tc.id`
+- ANOMALIE : `tc.price_cents != oi.unit_price_cents`
+
+**6.6.3**
+```sql
+SELECT
+	oi.id AS order_item_id,
+	oi.order_id,
+	(tc.price_cents / 100)::MONEY AS displayed_price,
+	(oi.unit_price_cents / 100)::MONEY AS sold_price
+FROM
+	order_items oi
+JOIN
+	ticket_categories tc ON oi.category_id = tc.id
+WHERE
+	tc.price_cents != oi.unit_price_cents
+```
+
+**6.6.4**
+
+CONCLUSION : La commande dont l'id est **28** comporte une erreur de prix pour la ligne de commande dont l'id est **30**.
+
+---
+
