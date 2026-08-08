@@ -661,3 +661,25 @@ CONCLUSION : La commande dont l'id est **28** comporte une erreur de prix pour l
 
 ---
 
+**6.7**
+>  Le total affiché sur certaines commandes ne correspond pas à la somme de leurs lignes.
+
+**6.7.1**
+
+Le total (`orders.total_cents`) de certaines commandes ne correspond pas à la somme de leurs lignes (`SUM(order_items.quantity * order_items.unit_price_cents)`)
+
+**6.7.2**
+- TABLES : *orders **o***, *order_items **oi***
+- JOINTS : `o.id = oi.order_id`
+- ANOMALIE : `orders.total_cents != SUM(order_items.quantity * order_items.unit_price_cents)`
+
+**6.7.3**
+```sql
+
+```
+
+**6.7.4**
+
+CONCLUSION : 
+
+---
