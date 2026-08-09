@@ -505,6 +505,48 @@ JOIN
 WHERE
 	oi.order_id = 27
 
+-- **6.7**
+-- >  Le total affiché sur certaines commandes ne correspond pas à la somme de leurs lignes.
+
+-- **6.7.1**
+
+-- Le total (`orders.total_cents`) de certaines commandes ne correspond pas à la somme de leurs lignes (`SUM(order_items.quantity * order_items.unit_price_cents)`)
+
+-- **6.7.2**
+-- - TABLES : *orders **o***, *order_items **oi***
+-- - JOINTS : `o.id = oi.order_id`
+-- - ANOMALIE : `orders.total_cents != SUM(order_items.quantity * order_items.unit_price_cents)`
+
+-- **6.7.3**
+-- ```sql
+SELECT
+	o.id AS order_id,
+	-- oi.id AS order_item_id, -- Retiré pour obtenir la somme par order_id
+	SUM(oi.quantity * oi.unit_price_cents) -- prix supposé de la commande
+		- ((SUM(oi.quantity * oi.unit_price_cents) / 100) * COALESCE(pc.percent_off, 0)) -- calcul en cas de promo
+		AS supposed_total,
+	o.total_cents AS real_total
+FROM
+	orders o
+JOIN
+	order_items oi ON oi.order_id = o.id
+LEFT JOIN -- LEFT JOIN pour voir les 'o.id' sans promo
+	promo_codes pc ON pc.id = o.promo_code_id
+GROUP BY
+	o.id,
+	-- oi.id, -- Retiré pour obtenir la somme par order_id
+	pc.percent_off
+HAVING
+	SUM(oi.quantity * oi.unit_price_cents) 
+		- ((SUM(oi.quantity * oi.unit_price_cents) / 100) * COALESCE(pc.percent_off, 0))
+	!= o.total_cents
+-- ```
+
+-- **6.7.4**
+
+-- CONCLUSION : Le total de la commande dont l'id est **29** n'a pas été calculé correctement.
+
+-- ---
 
 
 
