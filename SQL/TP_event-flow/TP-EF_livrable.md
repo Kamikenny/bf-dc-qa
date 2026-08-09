@@ -1,5 +1,16 @@
 # Résultat livrable du TP EventFlow
 
+## Table des matières
+
+1. [Partie 1](#partie-1)
+2. [Partie 2](#partie-2)
+3. [Partie 3](#partie-3)
+3. [Partie 4](#partie-4)
+3. [Partie 5](#partie-5)
+3. [Partie 6](#partie-6)
+3. [Partie 7](#partie-7)
+3. [Partie 8](#partie-8)
+
 ## Partie 1
 
 **1.1** Combien d'utilisateurs la table `users` contient-elle, par rôle ?
