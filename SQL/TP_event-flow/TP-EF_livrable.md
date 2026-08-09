@@ -462,8 +462,8 @@ WHERE
 **6.1.4**
 
 CONCLUSION :
-- Le statut de la commande dont l'id est 21 a été mis à jour alors qu'il n'y a pas eu de paiement.
-- Le statut de la commande dont l'id est 22 n'a pas été mis à jour après le paiement.
+- Le statut de la commande (**id: 21**) a été mis à jour alors qu'il n'y a pas eu de paiement.
+- Le statut de la commande (**id: 22**) n'a pas été mis à jour après le paiement.
 
 ---
 
@@ -496,7 +496,7 @@ WHERE
 
 **6.2.4**
 
-CONCLUSION : La commande dont l'id est **23** n'est pas encore remboursée.
+CONCLUSION : La commande (**id: 23**) n'est pas encore remboursée.
 
 ---
 
@@ -539,7 +539,7 @@ WHERE
 
 **6.3.4**
 
-CONCLUSION : La commande dont l'id est **24** par "*Inès Moreau*" a bénéficié d'un code promo expiré.
+CONCLUSION : La commande (**id: 24**) a bénéficié d'un code promo (`EXPIRED15`) expiré.
 
 ---
 
@@ -623,7 +623,7 @@ WHERE
 
 **6.5.4**
 
-CONCLUSION : La commande dont l'id est 27 références des billets pour deux evénements différents.
+CONCLUSION : La commande (**id: 27**) référence des billets pour deux evénements différents.
 
 ---
 
@@ -657,7 +657,7 @@ WHERE
 
 **6.6.4**
 
-CONCLUSION : La commande dont l'id est **28** comporte une erreur de prix pour la ligne de commande dont l'id est **30**.
+CONCLUSION : La commande (**id: 28**) comporte une erreur de prix pour la ligne de commande (**id: 30**).
 
 ---
 
@@ -701,6 +701,483 @@ HAVING
 
 **6.7.4**
 
-CONCLUSION : Le total de la commande dont l'id est **29** n'a pas été calculé correctement.
+CONCLUSION : Le total de la commande (**id: 29**) n'a pas été calculé correctement.
 
 ---
+
+**6.8**
+>  Une commande dépasserait la limite de six billets.
+
+**6.8.1**
+
+Une commande (`orders.id`) dépasserait la limite de 6 billets (`SUM(order_items.quantity)`)
+
+**6.8.2**
+- TABLES : *orders **o***, *order_items **oi***
+- JOINTS : `o.id = oi.order_id`
+- ANOMALIE : `SUM(oi.quantity) > 6`
+
+**6.8.3**
+```sql
+SELECT
+	o.id AS order_id,
+	o.status,
+	SUM(oi.quantity) AS tickets_qty
+FROM
+	orders o
+JOIN
+	order_items oi ON o.id = oi.order_id
+GROUP BY
+	o.id
+HAVING
+	SUM(oi.quantity) > 6
+```
+
+**6.8.4**
+
+CONCLUSION : La commande (**id: 30**) a permis l'achat de 9 tickets.
+
+---
+
+**6.9**
+>  Une catégorie de billets pourrait être en sur-vente même sans que l'événement entier ne le soit.
+
+**6.9.1**
+
+Une catégorie de billets (`ticket_categories.id`) pourrait être en sur-vente (`SUM(order_items.quantity) > ticket_categories.quota`) même sans que l'événement entier ne le soit (`SUM(order_items.quantity) < events.capacity`)
+
+**6.9.2**
+- TABLES : *ticket_categories **tc***, *order_items **oi***
+- JOINTS : `tc.id = oi.category_id`
+- ANOMALIE : `SUM(order_items.quantity) > ticket_categories.quota`
+
+**6.9.3**
+```sql
+SELECT
+	tc.id AS category_id,
+	SUM(oi.quantity) AS total_sold,
+	tc.quota AS max_available
+FROM
+	ticket_categories tc
+JOIN
+	order_items oi ON tc.id = oi.category_id
+JOIN
+	orders o ON oi.order_id = o.id AND o.status = 'paid' -- 'pending' et 'refund' ne sont pas des anomalies
+GROUP BY
+	tc.id
+HAVING
+	SUM(oi.quantity) > tc.quota
+```
+
+**6.9.4**
+
+CONCLUSION : Les catégories de billets (**id: 1** et **id: 11**) sont en sur-vente.
+
+---
+
+**6.10**
+>  Le montant payé ne correspond pas toujours exactement au total de la commande.
+
+**6.10.1**
+
+Le montant payé (`payments.amount_cents`) ne correspond pas toujours exactement au total de la commande (`orders.total_cents`)
+
+**6.10.2**
+- TABLES : *orders **o***, *payments **p***
+- JOINTS : `o.id = p.order_id`
+- ANOMALIE : `o.total_cents != p.amount_cents`
+
+**6.10.3**
+```sql
+SELECT
+	o.id AS order_id,
+	(o.total_cents / 100)::MONEY AS order_total,
+	(p.amount_cents / 100)::MONEY AS amount_paid,
+	p.id AS payment_id
+FROM
+	orders o
+JOIN
+	payments p ON p.order_id = o.id
+WHERE
+	(o.total_cents / 100)::MONEY != (p.amount_cents / 100)::MONEY
+```
+
+**6.10.4**
+
+CONCLUSION : Le montant de la commande (**id: 33**) ne correspond pas au montant du paiement (**id: 27**)
+
+---
+
+**6.11**
+>  Un remboursement serait supérieur au paiement d'origine. 
+
+**6.11.1**
+
+Un remboursement (`refunds.amount_cents`) serait supérieur au paiement d'origine (`payments.amount_cents`)
+
+**6.11.2**
+- TABLES : *orders **o***, *payments **p***, *refunds **r***
+- JOINTS : `o.id = r.order_id`, `o.id = p.order_id`
+- ANOMALIE : `r.amount_cents != p.amount_cents`
+
+**6.11.3**
+```sql
+SELECT
+	o.id AS order_id,
+	-- o.status, -- *
+	p.id AS payment_id,
+	(p.amount_cents / 100)::MONEY AS amount_paid,
+	(r.amount_cents / 100)::MONEY AS amount_refund,
+	r.status, -- Simple check
+	r.id AS refund_id
+FROM
+	orders o
+JOIN
+	payments p ON o.id = p.order_id
+JOIN
+	refunds r ON r.order_id = o.id
+WHERE
+	-- o.status = 'refund' -- *
+	(r.amount_cents / 100)::MONEY != (p.amount_cents / 100)::MONEY
+	
+-- * Le statut des commandes remboursées n'est pas mis à jour (peu importe le montant)
+
+-- DOUBLE CHECK :
+SELECT
+	o.id,
+	o.status
+FROM
+	orders o
+```
+
+**6.11.4**
+
+CONCLUSION : Pour la commande (**id: 34**), le paiement (**id: 28**) et le remboursement (**id: 2**) ne coïncident pas.
+> **Note:** Le statut des commandes remboursées n'est pas mis à jour.
+
+---
+
+## Partie 7
+
+**7.1** Créez un nouveau client de test (`INSERT INTO users`). Vérifiez son insertion avec un `SELECT` ciblé sur son email.
+```sql
+-- Début de transaction
+BEGIN;
+-- 
+INSERT INTO
+	users (email, full_name, role, password_hash)
+VALUES
+	('kenny@mail.mail', 'Kenny Test', 'client', 'abc123')
+
+-- Check
+SELECT
+	*
+FROM
+	users
+WHERE
+	email ILIKE 'kenny%'
+
+-- Fin de transaction
+COMMIT;
+-- ou
+ROLLBACK;
+```
+> **Résultat :**
+> | "id" | "email"           | "password_hash" | "full_name"  | "role"   | "created_at"                 |
+> |------|-------------------|-----------------|--------------|----------|------------------------------|
+> | 17   | "kenny@mail.mail" | "abc123"        | "Kenny Test" | "client" | "2026-08-09 22:17:45.361071" |
+
+---
+
+**7.2** Créez, pour ce client, une commande `pending` sur un événement de votre choix, avec sa ligne de commande (`orders` + `order_items`). Vérifiez la cohérence avec un `SELECT` joignant les deux tables.
+```sql
+-- Début de transaction
+BEGIN;
+
+-- order en premier (parce que order_items a besoin d'un order.id)
+INSERT INTO
+	orders (user_id, event_id, status)
+VALUES
+	(17, 2, 'pending')
+
+-- ensuite order_item
+INSERT INTO
+	order_items (order_id, category_id, quantity, unit_price_cents)
+VALUES
+	((
+		-- Insertion manuelle compliquée à cause des rollbacks et de l'incrémentation
+		SELECT
+			id
+		FROM
+			orders
+		WHERE
+			user_id = 17 -- mon id. Il n'évolue pas avec les rollbacks.
+	), 4, 2, (
+		-- Certitude d'obtenir le montant correct
+		SELECT
+			price_cents
+		FROM
+			ticket_categories
+		WHERE
+			id = 4
+	))
+
+-- ensuite update du prix de la commande
+UPDATE
+	orders
+SET
+	total_cents = (
+		SELECT
+			oi.quantity * oi.unit_price_cents
+		FROM
+			order_items oi
+		JOIN
+			orders o ON o.id = oi.order_id
+		WHERE
+			o.user_id = 17 -- mon id. Il n'évolue pas avec les rollbacks.
+	)
+
+-- CHECK
+SELECT
+	o.id AS order_id,
+	u.full_name AS client,
+	e.title AS event_title,
+	o.status,
+	tc.name AS ticket_category,
+	oi.quantity,
+	(oi.unit_price_cents / 100)::MONEY AS unit_price,
+	(o.total_cents / 100)::MONEY AS total_price
+FROM
+	orders o
+JOIN
+	users u ON o.user_id = u.id
+JOIN
+	events e ON o.event_id = e.id
+JOIN
+	order_items oi ON oi.order_id = o.id
+JOIN
+	ticket_categories tc ON tc.id = oi.category_id
+WHERE
+	u.id = 17 -- mon id. Il n'évolue pas avec les rollbacks.
+
+
+-- Fin de transaction
+COMMIT;
+-- ou
+ROLLBACK;
+```
+
+> **Résultat :**
+> | "order_id" | "client"     | "event_title"      | "status"  | "ticket_category" | "quantity" | "unit_price" | "total_price" |
+> |------------|--------------|--------------------|-----------|-------------------|------------|--------------|---------------|
+> | 40         | "Kenny Test" | "Conférence DevQA" | "pending" | "Standard"        | 2          | "40,00 €"    | "80,00 €"     |
+
+---
+
+**7.3** Faites passer cette commande au statut `paid`, **sans créer de paiement associé** — vous venez de reproduire volontairement une anomalie de type « commande payée sans paiement ». Écrivez ensuite le `SELECT` qui la détecterait dans un audit (il doit fonctionner aussi bien sur votre commande que sur celles de la Partie 6).
+```sql
+-- Début de transaction
+BEGIN;
+
+--
+UPDATE
+	orders
+SET
+	status = 'paid'
+WHERE
+	user_id = 17 -- mon id. bla bla bla
+
+-- Check
+SELECT
+	o.id AS order_id,
+	u.full_name,
+	o.status
+FROM
+	orders o
+JOIN
+	users u ON u.id = o.user_id
+WHERE
+	user_id = 17 -- mon id. bla bla bla
+
+
+-- Fin de transaction
+COMMIT;
+-- ou
+ROLLBACK;
+```
+
+> **Résultat de l'update :**
+> | "order_id" | "full_name"  | "status" | "status"  | "ticket_category" | "quantity" | "unit_price" | "total_price" |
+> |------------|--------------|----------|-----------|-------------------|------------|--------------|---------------|
+> | 40         | "Kenny Test" | "paid"   | "pending" | "Standard"        | 2          | "40,00 €"    | "80,00 €"     |
+
+
+**Détection de l'anomalie :**
+```sql
+SELECT
+	o.id AS order_id,
+	u.full_name AS client,
+	o.status AS order_status,
+	p.id AS payment_id
+FROM
+	orders o
+FULL JOIN
+	payments p ON p.order_id = o.id
+JOIN
+	users u ON u.id = o.user_id
+WHERE
+	o.status = 'paid' AND p.id IS NULL
+	OR o.status != 'paid' AND p.id IS NOT NULL
+```
+
+> **Résultat de la détection:**
+> | "order_id" | "client"      | "order_status" | "payment_id" |
+> |------------|---------------|----------------|--------------|
+> | 22         | "Chloé Petit" | "pending"      | 16           |
+> | 40         | "Kenny Test"  | "paid"         | [null]       |
+> | 21         | "Yusuf Demir" | "paid"         | [null]       |
+
+---
+
+**7.4** Nettoyez vos données de test (`DELETE`) et vérifiez, avec un `SELECT`, qu'il n'en reste aucune trace.
+```sql
+-- Début de transaction
+BEGIN;
+
+-- On efface d'abord dans order_items car aucune dépendance
+DELETE FROM
+	order_items
+WHERE
+	id = (
+		-- On cible précisément la bonne ligne (pas en manuel)
+		SELECT
+			oi.id AS order_item_id
+		FROM
+			order_items oi
+		JOIN
+			orders o ON oi.order_id = o.id
+		WHERE
+			o.user_id = 17
+	)
+
+-- On efface ensuite la commande car plus de dépendance
+DELETE FROM
+	orders
+WHERE
+	id = (
+		-- On cible uniquement la commande liée à mon ID
+		SELECT
+			id
+		FROM
+			orders
+		WHERE
+			user_id = 17
+	)
+
+-- Enfin on efface l'user car plus de dépendance
+DELETE FROM
+	users
+WHERE
+	id = (
+		-- On cible juste mon ID
+		SELECT
+			id
+		FROM
+			users
+		WHERE
+			email = 'kenny@mail.mail'
+	)
+
+-- Fin de transaction
+COMMIT;
+-- ou
+ROLLBACK;
+```
+
+**Check *users* :**
+```sql
+SELECT
+	id
+FROM
+	users
+WHERE
+	email = 'kenny@mail.mail'
+```
+
+**Check *orders* :**
+```sql
+SELECT
+	id
+FROM
+	orders
+WHERE
+	user_id = 17
+```
+
+**Check *order_items* :**
+```sql
+SELECT
+	oi.id AS oi_id
+FROM
+	order_items oi
+JOIN
+	orders o ON o.id = oi.order_id AND o.user_id = 17
+```
+
+---
+
+## Partie 8
+
+**8.1** Proposez et testez **au moins cinq vérifications supplémentaires** que le Product Owner n'a pas mentionnées dans sa liste (Partie 6) — des risques plausibles compte tenu du schéma, pas forcément des soucis déjà identifiés. Pour chacune, écrivez la requête, exécutez-la, et concluez.
+
+**8.1.1** "Une commande a été remboursée mais le statut de la commande n'a pas été mis à jour."
+```sql
+SELECT
+	o.id AS order_id,
+	-- o.status, -- *
+	p.id AS payment_id,
+	(p.amount_cents / 100)::MONEY AS amount_paid,
+	(r.amount_cents / 100)::MONEY AS amount_refund,
+	r.status, -- Simple check
+	r.id AS refund_id
+FROM
+	orders o
+JOIN
+	payments p ON o.id = p.order_id
+JOIN
+	refunds r ON r.order_id = o.id
+WHERE
+	-- o.status = 'refund' -- *
+	(r.amount_cents / 100)::MONEY != (p.amount_cents / 100)::MONEY
+	
+-- * Le statut des commandes remboursées n'est pas mis à jour (peu importe le montant)
+
+-- DOUBLE CHECK :
+SELECT
+	o.id,
+	o.status
+FROM
+	orders o
+```
+
+**8.1.2** "Les commandes (`status = 'pending'`) n'expirent pas après 10 minutes."
+```sql
+SELECT
+	id,
+	status,
+	created_at,
+	expires_at,
+	expires_at - created_at -- devrait être <= 10 minutes
+FROM
+	orders
+WHERE
+	status = 'pending'
+	AND created_at + interval '10 minutes' < expires_at
+```
+
+**8.2**
+
+| Code | Règle |
+|---|---|
+| RM8 | Un organisateur doit pouvoir éditer son événement |
+| RM9 | Le montant d'un remboursement ne peut jamais excéder le montant de la commande concernée |
