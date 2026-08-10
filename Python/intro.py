@@ -1,6 +1,3 @@
-# import pour exo
-import random
-
 # Trouvez un moyen d'inverser les valeurs de a et b sans utiliser l'affectation multiple (a, b = b, a)
 """ a:int = 5
 b:int = 7
@@ -115,9 +112,9 @@ print(a, b)
  """
 
 # 2
-""" a = a + b
-b = a - b
-a -= b """
+""" a += b      # 5 => 5 + 7 => 12
+b = a - b   # 7 => 12 - 7 => 5
+a -= b      # 12 => 12 - 5 => 7 """
 
 # 5. Écrivez un programme Python convertissant un nombre de secondes en jours, heures, minutes et seconds correspondants. Exemple : 4561 secondes correspondent à 0 jour, 1 heure, 16 minutes et 1 seconde. Réfléchissez à la méthode à utiliser, puis réalisez l'algorithme en Python. Testez-le ensuite pour vérifier sa validité.
 """ input_seconds = int(input("Entrer un nombre de secondes : "))
@@ -248,10 +245,11 @@ while guess != mystery:
 
 """ print("Je vais calculer votre IMC.")
 
-weight: int = int(input("Quel est votre poids ? (en kg) : "))
-height: int = int(input("Quelle est votre taille ? (en cm) : "))
+weight: float = float(input("Quel est votre poids ? (en kg) : "))
+height_cm: int = int(input("Quelle est votre taille ? (en cm) : "))
+height_m: float = height_cm / 100
 
-imc: float = weight / (height / 100) ** 2
+imc: float = weight / (height_m ** 2)
 
 if imc < 18.5:
     print(f"Votre IMC est {imc:.2f}. Vous êtes en état de 'Sous-poids'.")
