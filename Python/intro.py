@@ -321,7 +321,7 @@ print("Bonne journée !") """
 
 # 6. Créez un programme qui génère des citations aléatoires à partir d'un nombre aléatoire. L'utilisateur devrait pouvoir choisir un thème et le programme générera une citation aléatoire correspondante. Utilisez des correspondances pour gérer les différents thèmes et générer les citations appropriées
 
-quotes = {
+""" quotes = {
     "theme_1" : ["theme_1_quote_1", "theme_1_quote_2", "theme_1_quote_3"],
     "theme_2" : ["theme_2_quote_1", "theme_2_quote_2", "theme_2_quote_3"],
     "theme_3" : ["theme_3_quote_1", "theme_3_quote_2", "theme_3_quote_3"]
@@ -334,4 +334,4 @@ for i in range(0, len(themes_list)):
     print(f"{i + 1}. {themes_list[i]}")
 chosen_theme = themes_list[int(input("Entrez juste le chiffre : ")) - 1]
 
-print(quotes[chosen_theme][random.randint(0, len(quotes[chosen_theme]))])
+print(quotes[chosen_theme][random.randint(0, len(quotes[chosen_theme]))]) """
