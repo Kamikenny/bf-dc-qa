@@ -328,8 +328,150 @@ print("Bonne journée !") """
 themes_list = list(quotes.keys())
 
 print("Bonjour, quel thème pour votre citation ? ")
-for i in range(0, len(themes_list)):
+for i in range(len(themes_list)):
     print(f"{i + 1}. {themes_list[i]}")
 chosen_theme = themes_list[int(input("Entrez juste le chiffre : ")) - 1]
 
 print(quotes[chosen_theme][random.randint(0, len(quotes[chosen_theme]))]) """
+
+######
+
+# 1. Concevez un programme qui génère et affiche les nombres premiers jusqu'à 100 en utilisant une boucle.
+
+""" prime_numbers: set = {2}
+for i in range(3, 1010):
+    for n in range(2, i + 1):
+        # print(f"{i} % {n} = {i % n}")
+        if n == i:
+            prime_numbers.add(i)
+        elif i % n == 0:
+            break
+print(prime_numbers) """
+
+
+###
+
+
+
+# 2. Créez un programme qui demande à l'utilisateur d'entrer son âge. Utilisez un opérateur ternaire pour vérifier si l'utilisateur est majeur ou mineur. Affichez ensuite un message approprié en fonction de la réponse.
+
+""" age = int(input("donne ton age : "))
+result = "Tu es majeur" if age >= 18 else "Tu es mineur"
+print(result) """
+
+# 3. Jeu de devinette de nombre amélioré : Écrivez un jeu interactif où l'ordinateur génère un nombre aléatoire entre 1 et 100, et l'utilisateur doit deviner ce nombre. 
+# Utilisez une boucle pour permettre à l'utilisateur de faire plusieurs tentatives. 
+# Après chaque tentative, demandez à l'utilisateur s'il souhaite continuer à jouer. 
+# Répétez le processus jusqu'à ce qu'il décide de ne plus jouer. 
+# Enfin, affichez le nombre de tentatives utilisées pour deviner le nombre.
+
+""" import random
+
+mystery: int = random.randint(1, 100)
+guess: int = 0
+tries = 0
+
+while guess != mystery:
+    guess = int(input("Essaie de deviner le nombre mystère : "))
+    tries += 1
+
+    if guess < mystery:
+        print(f"DOMMAGE ! Le nombre mystère est plus grand que {guess}.")
+        if input("Continuer ? 'Non' pour arrêter\n") == "Non":
+            break
+    elif guess > mystery:
+        print(f"DOMMAGE ! le nombre mystère est plus petit que {guess}.")
+        if input("Continuer ? 'Non' pour arrêter\n") == "Non":
+            break
+    else:
+        print(f"FELICITATIONS !!! Le nombre mystère était bien {mystery} !\n"
+              + f"Vous avez trouvé en {tries} essais !") """
+
+# 4. Écrivez un programme qui demande à l'utilisateur d'entrer un mot. Utilisez une boucle pour afficher chaque caractère du mot un par un jusqu'à la fin du mot.
+
+""" word = input("Entre un mot : ")
+
+print("Voici les lettres du mot : ")
+for letter in word:
+    print(letter) """
+
+# 1'. Gestionnaire de commandes de café amélioré :
+# Écrivez un programme interactif qui prend les commandes de café en fonction des options telles que la taille, le type de café et les extras. 
+# Utilisez une boucle pour permettre à l'utilisateur de passer plusieurs commandes et affichez le prix total à la fin de chaque commande. 
+# Demandez ensuite à l'utilisateur s'il souhaite passer une autre commande et répétez le processus jusqu'à ce qu'il n'en ait plus envie.
+
+""" orders_list: list[dict[str, int|float]] = []
+coffee_order = {
+    "size": 0,
+    "type": 0,
+    "sugar_qty": 0,
+    "milk_qty": 0,
+    "price": 0.0
+}
+
+ordering: bool = True
+
+while ordering:
+    print("Bienvenue")
+    while coffee_order["size"] not in (1, 2, 3):
+        coffee_order["size"] = int(input(
+            "Quelle taille pour le café ? (Entrez juste le chiffre)\n" +
+            "1. Petit\n" +
+            "2. Moyen\n" +
+            "3. Grand\n"
+        ))
+    coffee_order["price"] += coffee_order["size"] * 1
+
+    while coffee_order["type"] not in (1, 2, 3):
+        coffee_order["type"] = int(input(
+            "Quelle type de café ? (Entrez juste le chiffre)\n" +
+            "1. Pas bon\n" +
+            "2. Bon\n" +
+            "3. Très bon\n"
+        ))
+    coffee_order["price"] += coffee_order["type"] * 1
+
+    while coffee_order["sugar_qty"] not in (1, 2, 3, 4):
+        coffee_order["sugar_qty"] = int(input(
+            "Quelle quantité de sucre ? (Entrez juste le chiffre)\n" +
+            "1. Pas du tout\n" +
+            "2. Un peu\n" +
+            "3. Beaucoup\n" +
+            "4. Trop\n"
+        ))
+    coffee_order["price"] += (coffee_order["sugar_qty"] - 1) * 0.1
+
+    while coffee_order["milk_qty"] not in (1, 2, 3, 4):
+        coffee_order["milk_qty"] = int(input(
+            "Quelle quantité de lait ? (Entrez juste le chiffre)\n" +
+            "1. Pas du tout\n" +
+            "2. Un peu\n" +
+            "3. Beaucoup\n" +
+            "4. Trop\n"
+        ))
+    coffee_order["price"] += (coffee_order["milk_qty"] - 1) * 0.1
+
+    print("Merci")
+
+    orders_list.append(coffee_order)
+
+    continue_ordering: str = ""
+    while continue_ordering != 'Non' and continue_ordering != 'Oui':
+        continue_ordering = input("Voulez-vous commander un autre café ? : (Oui / Non) \n")
+    if continue_ordering == 'Oui':
+        pass
+    
+
+    print(f"Votre café coûte : {coffee_order['price']} €")
+ """
+
+# 2'. Écrivez un programme qui demande à l'utilisateur d'entrer un mot. 
+# Utilisez une boucle pour inverser l'ordre des lettres du mot et affichez le mot inversé à la fin.
+
+""" word = input("donne un mot : ")
+new_word = ""
+
+for letter in word:
+    new_word = letter + new_word
+print(new_word) """
+
