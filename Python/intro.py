@@ -229,4 +229,109 @@ else:
 print(f"La note de l'élève ({score}/100) se traduit par un : {letter}.") """
 
 # 3. Créez un programme qui génère un nombre aléatoire (import random) et permet à l'utilisateur de deviner ce nombre. Utilisez des correspondances pour comparer la devinette de l'utilisateur avec le nombre généré et fournir des indices
+""" import random
 
+mystery: int = random.randint(1, 10)
+guess: int = 0
+
+while guess != mystery:
+    guess = int(input("Essaie de deviner le nombre mystère : "))
+
+    if guess < mystery:
+        print(f"DOMMAGE ! Le nombre mystère est plus grand que {guess}.")
+    elif guess > mystery:
+        print(f"DOMMAGE ! le nombre mystère est plus petit que {guess}.")
+    else:
+        print(f"FELICITATIONS !!! Le nombre mystère était bien {mystery} !") """
+
+# 4. Créez un programme qui calcule l'indice de masse corporelle (IMC) d'une personne en fonction de son poids et de sa taille. Utilisez des correspondances pour interpréter et catégoriser l'IMC résultant en différentes catégories de poids.
+
+""" print("Je vais calculer votre IMC.")
+
+weight: int = int(input("Quel est votre poids ? (en kg) : "))
+height: int = int(input("Quelle est votre taille ? (en cm) : "))
+
+imc: float = weight / (height / 100) ** 2
+
+if imc < 18.5:
+    print(f"Votre IMC est {imc:.2f}. Vous êtes en état de 'Sous-poids'.")
+elif imc < 25:
+    print(f"Votre IMC est {imc:.2f}. Vous êtes en état de 'Poids sain'.")
+elif imc < 30:
+    print(f"Votre IMC est {imc:.2f}. Vous êtes en état de 'Surpoids'.")
+else:
+    print(f"Votre IMC est {imc:.2f}. Vous êtes en état de 'Obésité'.") """
+
+# 5. Créez un programme qui permet à l'utilisateur de choisir un menu pour chaque repas (petit-déjeuner, déjeuner, dîner) parmi des options préétablies. Après la sélection, il affiche les choix de l'utilisateur pour chaque repas et résume l'ensemble des repas de la journée.
+
+""" daily_meals = {
+    "breakfast" : "",
+    "lunch" : "",
+    "dinner" : ""
+}
+
+breakfasts = {
+    "1" : "Couques",
+    "2" : "Eggs & Bacon",
+    "3" : "Bread & Butter"
+}
+
+lunches = {
+    "1" : "Bread & Ham",
+    "2" : "Eggs & Bacon",
+    "3" : "Pasta"
+}
+
+dinners = {
+    "1" : "Thai Curry",
+    "2" : "Steak, Chips & Marmelade",
+    "3" : "Chicken Burger"
+}
+
+print("Bienvenue")
+
+input_choice: str = ""
+while input_choice not in ("1", "2", "3"):
+    print("Quel petit-déjeuner voulez-vous ?")
+    for b in breakfasts:
+        print(f"{b}. {breakfasts[b]}")
+    input_choice = input("Entrez juste le chiffre : ")
+daily_meals["breakfast"] = breakfasts[input_choice]
+input_choice = ""
+
+while input_choice not in ("1", "2", "3"):
+    print("Quel déjeuner voulez-vous ?")
+    for l in lunches:
+        print(f"{l}. {lunches[l]}")
+    input_choice = input("Entrez juste le chiffre : ")
+daily_meals["lunch"] = lunches[input_choice]
+input_choice = ""
+
+while input_choice not in ("1", "2", "3"):
+    print("Quel dîner voulez-vous ?")
+    for d in dinners:
+        print(f"{d}. {dinners[d]}")
+    input_choice = input("Entrez juste le chiffre : ")
+daily_meals["dinner"] = dinners[input_choice]
+
+print("Voici votre sélection du jour : ")
+for m in daily_meals:
+    print(f"{m} : {daily_meals[m]}")
+print("Bonne journée !") """
+
+# 6. Créez un programme qui génère des citations aléatoires à partir d'un nombre aléatoire. L'utilisateur devrait pouvoir choisir un thème et le programme générera une citation aléatoire correspondante. Utilisez des correspondances pour gérer les différents thèmes et générer les citations appropriées
+
+quotes = {
+    "theme_1" : ["theme_1_quote_1", "theme_1_quote_2", "theme_1_quote_3"],
+    "theme_2" : ["theme_2_quote_1", "theme_2_quote_2", "theme_2_quote_3"],
+    "theme_3" : ["theme_3_quote_1", "theme_3_quote_2", "theme_3_quote_3"]
+}
+
+themes_list = list(quotes.keys())
+
+print("Bonjour, quel thème pour votre citation ? ")
+for i in range(0, len(themes_list)):
+    print(f"{i + 1}. {themes_list[i]}")
+chosen_theme = themes_list[int(input("Entrez juste le chiffre : ")) - 1]
+
+print(quotes[chosen_theme][random.randint(0, len(quotes[chosen_theme]))])
