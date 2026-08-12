@@ -566,16 +566,16 @@ print(sum_ten) """
 """ tup = input("prénom ? :"), input("nom ? : ")
 prenom, nom = tup
 
-print(prenom, nom)
- """
+print(prenom, nom) """
+
 
 # 3. Générez deux ensembles de nombres aléatoires compris entre 1 et 20. 
 # Affichez ces deux ensembles générés. 
 # Enfin, trouvez l'intersection des deux ensembles et affichez-la.
 
 """ import random
-rand_1 = set([random.randint(1, 20) for i in range(10)])
-rand_2 = set([random.randint(1, 20) for i in range(10)])
+rand_1 = set(random.randint(1, 20) for _ in range(10))
+rand_2 = set(random.randint(1, 20) for _ in range(10))
 
 print(rand_1)
 print(rand_2)
@@ -590,7 +590,7 @@ print(rand_1.intersection(rand_2)) """
     "orange": 3
 }
 user_input = input("fruit ? : ")
-if user_input in list(fruits.keys()):
+if user_input in fruits:
     print(f"{user_input} coûte {fruits[user_input]} €")
 else:
     print("Ce fruit n'est pas dans la liste.") """
@@ -617,7 +617,7 @@ print(f"Le plus âgé est : {oldest}") """
 # Enfin, affichez la nouvelle liste contenant uniquement les nombres pairs.
 
 """ import random
-lst = [random.randint(1, 50) for i in range(10)]
+lst = [random.randint(1, 50) for _ in range(10)]
 print(lst)
 pairs = [i for i in lst if i % 2 == 0]
 print(pairs) """
@@ -645,7 +645,7 @@ school["sciences"].append(f"sciences{len(school["sciences"]) + 1}")
 school["anglais"].append(f"anglais{len(school["anglais"]) + 1}")
 
 cours = input("cours ? : ")
-if cours in list(school.keys()):
+if cours in school:
     print(school[cours])
 else:
     print("Il n'y a pas ce cours.") """
@@ -663,9 +663,11 @@ else:
 ]
 
 shop_dict = dict(shop_list)
+
 total = 0
-for produit in shop_dict:
-    total += shop_dict[produit]
+for item, qty in shop_list:
+    total += shop_dict[item] * qty
+    print(item, " * ", qty, total)
 print(total) """
 
 # 10. Créez une liste de dictionnaires représentant les informations des employés avec leur nom, salaire et département. 
@@ -710,3 +712,32 @@ departement2_average = departement2_somme / len(departement2_salaires)
 
 print(departement1_average)
 print(departement2_average) """
+
+# 10 CORRECTION
+""" employes = [
+    {"nom": "Alice", "salaire": 3000, "departement": "Ressources Humaines"},
+    {"nom": "Bob", "salaire": 3500, "departement": "Ventes"},
+    {"nom": "Charlie", "salaire": 3200, "departement": "Ressources Humaines"},
+    {"nom": "David", "salaire": 4000, "departement": "Comptabilité"},
+    {"nom": "Emma", "salaire": 3800, "departement": "Ventes"}
+]
+
+# Dictionnaire pour stocker la somme des salaires par département et le nombre d'employés par département
+somme_salaires = {} # exemple: {"Ressources Humaines": 6200}
+nb_employes = {} # exemple: {"Ressources Humaines": 2}
+
+for emp in employes:
+    dept = emp["departement"]
+    salaire = emp["salaire"]
+
+    somme_salaires[dept] = somme_salaires.setdefault(dept, 0) + salaire # Comme faire somme_salaires[dept] += salaire, mais setdefault(dept, 0) permet de créer la paire clé/valeur à la première itération
+    nb_employes[dept] = nb_employes.setdefault(dept, 0) + 1 # Comme faire nb_employes[dept] += 1, mais setdefault(dept, 0) permet de créer la paire clé/valeur à la première itération
+
+moyenne_departement = {}
+
+for dept, somme in somme_salaires.items():
+    moyenne = somme / nb_employes[dept]
+    moyenne_departement[dept] = moyenne
+
+print(moyenne_departement) """
+
