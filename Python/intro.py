@@ -741,3 +741,197 @@ for dept, somme in somme_salaires.items():
 
 print(moyenne_departement) """
 
+###
+# 1. Écrivez une fonction nommée calcul_moyenne() qui prend une liste de notes en entrée et retourne la moyenne de ces notes.
+
+def calcul_moyenne(lst: list[int]) -> float:
+    return round(sum(lst) / len(lst), 2)
+
+print(calcul_moyenne([15, 7, 8, 6, 33, 1, 54, 3]))
+
+# 2. Implémentez une fonction appelée recherche_min() qui prend une liste de nombres en entrée et retourne le plus petit de ces nombres.
+
+def recherche_min(lst: list[int|float]) -> int|float:
+    min: int|float = lst[0]
+    for i in lst:
+        if i < min:
+            min = i
+    return min
+
+# 3. Créez une fonction generer_email() qui prend un prénom et un nom en entrée, et retourne une adresse e-mail correspondante avec un domaine prédéfini.
+
+def generer_email(prenom: str, nom: str) -> str:
+    domain_name = "domain"
+    return f"{nom.lower()}.{prenom.lower()}@{domain_name}.com"
+
+print(generer_email("KENNY", "sirichantho"))
+
+# 4. Écrivez une fonction compte_mots() qui prend une chaîne de caractères représentant une phrase en entrée et retourne le nombre de mots dans cette phrase.
+
+def compte_mots(phrase: str) -> int:
+    return phrase.count(" ") + 1
+
+print(compte_mots("0 1 2 3 4 5 6 7 8 9"))
+
+# 5. Écrivez une fonction convertir_temperature() qui prend une température en degrés Celsius et la convertit en degrés Fahrenheit.
+
+def convertir_temperature(celsius: float) -> float:
+    fahrenheit = (celsius * (9/5)) + 32
+    return fahrenheit
+
+print(convertir_temperature(56))
+
+# 6. Créez une fonction nombres_pairs_impairs() qui prend une liste de nombres en entrée 
+# et retourne deux listes distinctes, l'une contenant les nombres pairs et l'autre les nombres impairs.
+
+def nombres_pairs_impairs(lst: list[int]) -> tuple:
+    even_list = [i for i in lst if i % 2 == 0]
+    odd_list = [i for i in lst if i % 2 == 1]
+    return even_list, odd_list
+
+print(nombres_pairs_impairs([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]))
+
+# 7. Implémentez une fonction inverser_chaine() qui prend une chaîne de caractères en entrée et retourne cette chaîne inversée.
+
+def inverser_chaine(str: str) -> str:
+    return str[::-1]
+
+print(inverser_chaine("0123456789"))
+
+# 8. Créez une fonction valider_mot_de_passe() qui prend un mot de passe en entrée et 
+# vérifie s'il répond à certains critères de complexité (longueur minimale, présence de chiffres, de lettres majuscules et minuscules, de caractères spéciaux, etc.). 
+# La fonction devrait renvoyer True si le mot de passe est valide et False sinon.
+
+def valider_mot_de_passe(password: str) -> bool:
+    if len(password) < 8:
+        return False
+    if all(c.isalnum() for c in password):
+        return False
+    if all(not c.islower() for c in password):
+        return False
+    if all(not c.isupper() for c in password):
+        return False
+    if all(not c.isdigit() for c in password):
+        return False
+    return True
+
+print(valider_mot_de_passe("aB1*aB1*"))
+print(valider_mot_de_passe("aB1*aB1")) # trop court
+print(valider_mot_de_passe("aB**aB**")) # pas de chiffre
+print(valider_mot_de_passe("aa1*aa1*")) # pas de majuscule
+print(valider_mot_de_passe("1B1*1B1*")) # pas de minuscule
+print(valider_mot_de_passe("aB11aB11")) # pas de car.sécial
+
+# Exercice bonus — Boîte à outils de fonctions RH
+
+## Contexte
+
+# Voici une liste de dictionnaires représentant les employés d'une entreprise (nom, salaire, département, ancienneté en années, ville) :
+
+employes = [
+    {"nom": "Alice", "salaire": 3200, "departement": "RH", "anciennete": 4, "ville": "Bruxelles"},
+    {"nom": "Bob", "salaire": 2800, "departement": "Ventes", "anciennete": 1, "ville": "Liège"},
+    {"nom": "Charlie", "salaire": 4100, "departement": "IT", "anciennete": 7, "ville": "Bruxelles"},
+    {"nom": "David", "salaire": 3600, "departement": "Ventes", "anciennete": 3, "ville": "Namur"},
+    {"nom": "Emma", "salaire": 2500, "departement": "RH", "anciennete": 1, "ville": "Bruxelles"},
+    {"nom": "Farid", "salaire": 3900, "departement": "IT", "anciennete": 5, "ville": "Liège"},
+    {"nom": "Giulia", "salaire": 3100, "departement": "Marketing", "anciennete": 2, "ville": "Namur"},
+    {"nom": "Hugo", "salaire": 2700, "departement": "Ventes", "anciennete": 1, "ville": "Bruxelles"},
+    {"nom": "Ines", "salaire": 4300, "departement": "IT", "anciennete": 9, "ville": "Liège"},
+    {"nom": "Julien", "salaire": 2900, "departement": "RH", "anciennete": 2, "ville": "Namur"},
+    {"nom": "Karim", "salaire": 3400, "departement": "Marketing", "anciennete": 4, "ville": "Bruxelles"},
+    {"nom": "Léa", "salaire": 3700, "departement": "Ventes", "anciennete": 6, "ville": "Liège"},
+    {"nom": "Marc", "salaire": 4500, "departement": "IT", "anciennete": 10, "ville": "Bruxelles"},
+    {"nom": "Nora", "salaire": 2600, "departement": "Marketing", "anciennete": 1, "ville": "Namur"},
+    {"nom": "Omar", "salaire": 3300, "departement": "RH", "anciennete": 3, "ville": "Liège"},
+    {"nom": "Paul", "salaire": 3000, "departement": "Ventes", "anciennete": 2, "ville": "Bruxelles"},
+    {"nom": "Quentin", "salaire": 4000, "departement": "IT", "anciennete": 6, "ville": "Namur"},
+    {"nom": "Rania", "salaire": 2800, "departement": "Marketing", "anciennete": 1, "ville": "Bruxelles"},
+    {"nom": "Sami", "salaire": 3500, "departement": "RH", "anciennete": 5, "ville": "Liège"},
+    {"nom": "Tom", "salaire": 3200, "departement": "Ventes", "anciennete": 3, "ville": "Namur"},
+    {"nom": "Ursula", "salaire": 3050, "departement": "Marketing", "anciennete": 2, "ville": "Bruxelles"},
+    {"nom": "Victor", "salaire": 4200, "departement": "IT", "anciennete": 8, "ville": "Liège"},
+    {"nom": "Wassila", "salaire": 2950, "departement": "RH", "anciennete": 1, "ville": "Namur"},
+    {"nom": "Xavier", "salaire": 3650, "departement": "Ventes", "anciennete": 4, "ville": "Bruxelles"},
+    {"nom": "Yasmine", "salaire": 3150, "departement": "Marketing", "anciennete": 3, "ville": "Liège"},
+]
+
+## Consigne
+
+# Écris **plusieurs fonctions séparées**, chacune avec un seul rôle clair. 
+# Une fonction ne doit jamais utiliser `print()` à l'intérieur d'elle-même — elle doit uniquement calculer et faire un `return`. 
+# C'est le `print()` à l'extérieur de la fonction qui affichera le résultat.
+
+### 1. `salaire_moyen(liste_employes)`
+# Renvoie la moyenne des salaires de toute la liste passée en paramètre.
+
+def salaire_moyen(liste_employes: list[dict]) -> float:
+    liste_salaires: list[int] = [emp["salaire"] for emp in liste_employes]
+    salaire_moyen: float = sum(liste_salaires) / len(liste_salaires)
+    return salaire_moyen
+
+print(salaire_moyen(employes)) # 3364.0 
+
+### 2. `filtrer_par_departement(liste_employes, departement)`
+# Renvoie une nouvelle liste contenant uniquement les employés du département donné.
+
+def filtrer_par_departement(liste_employes: list[dict], departement: str) -> list[dict]:
+    liste_employes_par_departement: list[dict] = [emp for emp in liste_employes if emp["departement"] == departement]
+    return liste_employes_par_departement
+
+print([emp["nom"] for emp in filtrer_par_departement(employes, "Ventes")]) # ['Bob', 'David', 'Hugo', 'Léa', 'Paul', 'Tom', 'Xavier']
+
+### 3. `employe_mieux_paye(liste_employes)`
+# Renvoie le **nom** (pas le dictionnaire entier) de l'employé ayant le salaire le plus élevé de la liste passée en paramètre.
+
+def employe_le_mieux_paye(liste_employes: list[dict]) -> str:
+    employe_le_mieux_paye: dict = liste_employes[0]
+    for emp in liste_employes:
+        if emp["salaire"] > employe_le_mieux_paye["salaire"]:
+            employe_le_mieux_paye = emp
+    return employe_le_mieux_paye["nom"]
+
+print(employe_le_mieux_paye(employes)) # Marc
+
+### 4. `augmenter_salaires(liste_employes, pourcentage)`
+# Renvoie une **nouvelle liste** avec tous les salaires augmentés du pourcentage donné.
+# ATTENTION : la liste `employes` d'origine ne doit **pas** être modifiée par cette fonction.
+
+def augmenter_salaires(liste_employes: list[dict], pourcentage: int) -> list[dict]:
+    liste_employes_augmentes = liste_employes.copy()
+    for emp in liste_employes_augmentes:
+        emp["salaire"] += emp["salaire"] / 100 * pourcentage
+    return liste_employes_augmentes
+
+# test facile à comparer
+# employes_augmentes = augmenter_salaires(employes, -200) 
+# for emp in employes_augmentes:
+#     print(emp["nom"], " = ", emp["salaire"])
+
+### 5. `masse_salariale_totale(liste_employes)`
+# Renvoie la somme de **tous** les salaires de la liste (le coût salarial total de l'entreprise).
+
+def masse_salariale_totale(liste_employes: list[dict]) -> int:
+    masse_salariale_totale = sum([emp["salaire"] for emp in liste_employes])
+    return masse_salariale_totale
+
+print(masse_salariale_totale(employes))
+
+### 6. `plus_ancien(liste_employes)`
+# Renvoie le **nom** de l'employé ayant le plus d'années d'ancienneté.
+
+### 7. `compter_par_departement(liste_employes)`
+# Renvoie un dictionnaire où chaque clé est un département, et chaque valeur est le **nombre d'employés** dans ce département.
+
+# Exemple de résultat attendu :
+# ```python
+# {"RH": 6, "Ventes": 6, "IT": 6, "Marketing": 6}
+# ```
+
+## Bonus — Combiner les fonctions
+
+# Une fois les fonctions écrites, utilise-les ensemble pour répondre à ces questions en une seule expression (en imbriquant les appels de fonctions) :
+
+# > Quel est le salaire moyen du département **Ventes** après une augmentation de **5%** pour tout le monde ?
+
+# > Qui est l'employé le mieux payé du département **IT** ?
