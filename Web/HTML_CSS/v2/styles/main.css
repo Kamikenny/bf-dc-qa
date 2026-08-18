@@ -1,0 +1,27 @@
+h1 {
+    color: rgb(81, 15, 143);
+}
+h2, h3, h4 {
+    color:rgb(207, 204, 21);
+}
+
+nav ul {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: row;
+    gap: 1em;
+}
+nav ul > li {
+    list-style: none;
+}
+
+nav a{
+    color:red;
+    text-decoration: none;
+    padding:1em;
+}
+nav a:hover {
+    color:coral;
+    text-decoration: underline;
+}
