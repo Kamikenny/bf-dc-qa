@@ -5,21 +5,26 @@ const gameForm = document.getElementById('game-form');
 const msgGameForm = document.getElementById('message-game-form');
 const displayWord = document.getElementById('le-mot-à-trouver');
 const failedLetters = document.getElementById('failed-letters');
+const remainingLives = document.getElementById('remaining-lives');
 
 //! Variable de stockage
 const letterAlreadySubmit = [];
 let mysteryWord;
 let lettersFound;
+let lives = 5;
 
 //! Setup du jeu
 function startGame() {
     // TODO Rendre aleatoire le choix de mot
     mysteryWord = ['S', 'O', 'L', 'E', 'I', 'L'];
-    lettersFound = [];
+    lettersFound = [' ', '-'];
     // Reset des lettres envoyées
     letterAlreadySubmit.splice(0, letterAlreadySubmit.length);
+    // Reset des vies
+    lives = 5;
     updateDisplayWord();
     displayFailedLetters();
+    updateDisplayLives();
 }
 startGame();
 
@@ -51,6 +56,8 @@ gameForm.addEventListener('submit', function (event) {
         }
         else {
             msgGameForm.textContent = `La lettre ${letter} n'est pas dans le mot`;
+            lives--;
+            updateDisplayLives();
             displayFailedLetters();
         }
     }
@@ -61,6 +68,11 @@ gameForm.addEventListener('submit', function (event) {
     // On continue ?
     if(checkGameOver()) {
         msgGameForm.textContent = `Bravo, vous avez gagné`;
+    }
+    else if (lives <= 0) {
+        msgGameForm.textContent = `Dommage, vous avez perdu`;
+        lettersFound = mysteryWord;
+        updateDisplayWord();
     }
 });
 
@@ -109,6 +121,10 @@ function displayFailedLetters() {
         // Ajoute la balise "span" à la balise "p"
         failedLetters.append(span);
     }
+}
+
+function updateDisplayLives() {
+    remainingLives.textContent = lives
 }
 
 function checkGameOver() {
