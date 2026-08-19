@@ -7,7 +7,7 @@ const displayWord = document.getElementById('le-mot-à-trouver');
 const failedLetters = document.getElementById('failed-letters');
 
 //! Variable de stockage
-const letterAlreadySubmit = new Set();
+const letterAlreadySubmit = [];
 let mysteryWord;
 let lettersFound;
 
@@ -17,8 +17,9 @@ function startGame() {
     mysteryWord = ['S', 'O', 'L', 'E', 'I', 'L'];
     lettersFound = [];
     // Reset des lettres envoyées
-    letterAlreadySubmit.clear();
+    letterAlreadySubmit.splice(0, letterAlreadySubmit.length);
     updateDisplayWord();
+    displayFailedLetters();
 }
 startGame();
 
@@ -38,11 +39,11 @@ gameForm.addEventListener('submit', function (event) {
     if(letter.length !== 1) {
         msgGameForm.textContent = 'La lettre invalide';
     }
-    else if(letterAlreadySubmit.has(letter)) {
+    else if(letterAlreadySubmit.includes(letter)) {
         msgGameForm.textContent = `La lettre ${letter} a déjà été proposé ! Boulet ♥`;
     }
     else {
-        letterAlreadySubmit.add(letter);
+        letterAlreadySubmit.push(letter);
         
         if(checkLetterIsValid(letter)) {
             msgGameForm.textContent = `La lettre ${letter} est dans le mot`;
@@ -93,12 +94,17 @@ function updateDisplayWord() {
 }
 
 function displayFailedLetters() {
-    displayFailedLetters.innerHTML = '';
+    failedLetters.innerHTML = '';
+    
     for (const letter of letterAlreadySubmit) {
+
+        if(lettersFound.includes(letter)) {
+            continue;
+        }
 
         // Création d'un balise "span" en JS (Pas afficher)
         const span = document.createElement('span');
-            span.textContent = letter;
+            span.textContent = letter + ', ';
 
         // Ajoute la balise "span" à la balise "p"
         failedLetters.append(span);
