@@ -6,22 +6,25 @@ const msgGameForm = document.getElementById('message-game-form');
 const displayWord = document.getElementById('le-mot-à-trouver');
 const failedLetters = document.getElementById('failed-letters');
 const remainingLives = document.getElementById('remaining-lives');
+const words = ['Soleil', 'Jupiter', 'Saturne', 'Uranus', 'Neptune', 'Terre', 'Venus', 'Mars', 'Ganymede', 'Titan', 'Mercure', 'Callisto', 'Io', 'Lune', 'Europa', 'Triton', 'Pluton', 'Titania', 'Rhea', 'Oberon', 'Japet', 'Charon', 'Umbriel', 'Ariel', 'Dione', 'Tethys', 'Ceres', 'Vesta', 'Pallas', 'Encelade', 'Miranda', 'Protee', 'Mimas', 'Hyperion', 'Iris', 'Phoebe', 'Janus', 'Epimethee', 'Lutece', 'Promethee', 'Pandore', 'Mathilde', 'Helene', 'Ida', 'Arrokoth', 'Phobos', 'Déimos', 'Tchourioumov-Guerassimenko', 'Hartley 2', 'Sagittarius A'];
 
 //! Variable de stockage
 const letterAlreadySubmit = [];
 let mysteryWord;
 let lettersFound;
 let lives = 5;
+let randomWordIndex;
 
 //! Setup du jeu
 function startGame() {
     // TODO Rendre aleatoire le choix de mot
-    mysteryWord = ['S', 'O', 'L', 'E', 'I', 'L'];
+    randomWordIndex = calculateRandomIndex(words.length)
+    mysteryWord = words[randomWordIndex].toUpperCase().split('')
     lettersFound = [' ', '-'];
     // Reset des lettres envoyées
     letterAlreadySubmit.splice(0, letterAlreadySubmit.length);
     // Reset des vies
-    lives = 5;
+    lives = 10;
     updateDisplayWord();
     displayFailedLetters();
     updateDisplayLives();
@@ -133,4 +136,8 @@ function checkGameOver() {
     const lettersFoundSet = new Set(lettersFound);
 
     return lettersFoundSet.isSupersetOf(mysteryWordSet);
+}
+
+function calculateRandomIndex(listLength) {
+    return Math.floor(Math.random() * ((listLength - 1) - 0 + 1) + 0)
 }
