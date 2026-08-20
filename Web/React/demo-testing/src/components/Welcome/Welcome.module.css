@@ -1,0 +1,16 @@
+/* 
+Objectif : Appliquer sur CSS pour un composant
+
+Permet d'ajout du style :
+- Avec des selecteurs qui ont au moins une classe 
+
+Le fonctionnement :
+- Module CSS → Le fichier DOIT avoir comme extension « .module.css »
+- A la "construction (build)", chaque classe est modifier avec un nom "aleatoire" 
+- Pour les utiliser, il faut faire une « import style from ...", l'objet "style" contient les correspondence nom de la classe et nom généré.
+*/
+
+.example {
+    color: indigo;
+    text-shadow: blue 0.1ch 0.1ch 0.1ch;
+}

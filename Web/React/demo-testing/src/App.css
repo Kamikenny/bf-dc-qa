@@ -1,0 +1,12 @@
+/*
+Objectif : Appliquer sur CSS sur le site
+
+Permet d'ajout du style :
+ - Sur des balises
+ - Via des id ou des classes 
+(Le dev doit s'assurer que les noms de classes n'ont pas de conflit)
+*/
+
+* {
+    font-family: 'Comic sans MS';
+}
