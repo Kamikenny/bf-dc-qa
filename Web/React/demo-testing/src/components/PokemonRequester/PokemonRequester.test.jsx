@@ -16,5 +16,26 @@ describe('PokemonRequester component', () => {
 
         // Assert
         expect(screen.getByText("Nom du Pokemon : voltorb")).toBeInTheDocument()
+    });
+
+    test('Shows loading message before request', async () => {
+        // Arrange
+        render(<PokemonRequester id={100} />)
+
+        // Assert
+        expect(screen.getByText('Le pokemon arrive !')).toBeInTheDocument();
+    });
+
+    test('Displays error message on failed request', async () => {
+        // Arrange
+        const pokemonId = -42
+
+        // Act
+        await act(() => {
+            render(<PokemonRequester id={pokemonId} />)
+        })
+
+        // Assert
+        expect(screen.getByText('Une erreur est survenu :o')).toBeInTheDocument()
     })
 })
