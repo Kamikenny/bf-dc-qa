@@ -17,9 +17,32 @@ describe('Welcome', () => {
         // - Aucun comportement pour ce test
 
         // - debug du screen
-        screen.debug(screen.getByRole("heading", { level: 1 }));
+        // screen.debug(screen.getByRole("heading", { level: 1 }));
 
         // Assert
         expect(screen.getByText(messageWelcome)).toBeInTheDocument();
-    })
+    }),
+
+        test('has a heading level 1 and content ILIKE "Bienvenue"', () => {
+            // Arrange
+            render(<Welcome firstname={'Bi'} lastname={'Blop'} />);
+
+            // Act
+            const title = screen.getByRole('heading', { level: 1 });
+
+            // Assert
+            expect(title).toHaveTextContent('Bienvenue');
+        }),
+
+        test('has a heading level 1 and content checked by regex', () => {
+            // Arrange
+            render(<Welcome firstname={'Jack'} lastname={'Sparrow'} />);
+
+            // Act
+            const title = screen.getByRole('heading', { level: 1 });
+
+            // Assert
+            expect(title).toHaveTextContent(/Bienvenue [a-z]+ [a-z]+ !/i);
+        })
+
 })
