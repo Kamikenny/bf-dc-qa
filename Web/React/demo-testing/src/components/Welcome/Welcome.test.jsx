@@ -3,7 +3,7 @@ import { describe, expect, test } from "vitest";
 import { render, screen } from "@testing-library/react";
 import Welcome from "./Welcome";
 
-describe('Welcome', () => {
+describe('Welcome component', () => {
     test('displays welcome message', () => {
         // Arrange
         // - Variable
@@ -21,28 +21,28 @@ describe('Welcome', () => {
 
         // Assert
         expect(screen.getByText(messageWelcome)).toBeInTheDocument();
-    }),
+    });
 
-        test('has a heading level 1 and content ILIKE "Bienvenue"', () => {
-            // Arrange
-            render(<Welcome firstname={'Bi'} lastname={'Blop'} />);
+    test('has a heading level 1 and content ILIKE "Bienvenue"', () => {
+        // Arrange
+        render(<Welcome firstname={'Bi'} lastname={'Blop'} />);
 
-            // Act
-            const title = screen.getByRole('heading', { level: 1 });
+        // Act
+        const title = screen.getByRole('heading', { level: 1 });
 
-            // Assert
-            expect(title).toHaveTextContent('Bienvenue');
-        }),
+        // Assert
+        expect(title).toHaveTextContent('Bienvenue');
+    });
 
-        test('has a heading level 1 and content checked by regex', () => {
-            // Arrange
-            render(<Welcome firstname={'Jack'} lastname={'Sparrow'} />);
+    test('has a heading level 1 and content checked by regex', () => {
+        // Arrange
+        render(<Welcome firstname={'Jack'} lastname={'Sparrow'} />);
 
-            // Act
-            const title = screen.getByRole('heading', { level: 1 });
+        // Act
+        const title = screen.getByRole('heading', { level: 1 });
 
-            // Assert
-            expect(title).toHaveTextContent(/Bienvenue [a-z]+ [a-z]+ !/i);
-        })
+        // Assert
+        expect(title).toHaveTextContent(/Bienvenue [a-z]+ [a-z]+ !/i);
+    });
 
 })

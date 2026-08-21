@@ -4,7 +4,7 @@ export default function Today() {
 
     const today = getToday();
 
-    return(
-        <p>Aujourd'hui nous sommes le {today.toLocaleDateString("fr-BE", {weekday: "long", day: "numeric", month: "long", year: "numeric"})}</p>
+    return (
+        <p>Aujourd'hui nous sommes le {today.toLocaleDateString("fr-BE", { dateStyle: "full" })}</p>
     )
 }
