@@ -10,7 +10,7 @@ vi.mock("../../tools/date.tool")
 
 describe('Today component', () => {
 
-    test('Displays the proper date', () => {
+    test('Displays date on Belgium\'s National Day', () => {
         // Setup Mock
         getToday.mockReturnValue(new Date(2026, 6, 21));
 
